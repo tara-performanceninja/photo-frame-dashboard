@@ -29,7 +29,8 @@ class OperationsTests(unittest.TestCase):
         with patch.object(ops, 'linear_query', side_effect=responses) as query:
             result = ops.fetch_linear()
             self.assertEqual(len(result['items']), 2)
-            self.assertEqual(query.call_args_list[1].args[1]['filter']['assignee']['id']['eq'], 'rich-user')
+            self.assertEqual(result['richId'], 'rich-user')
+            self.assertNotIn('assignee', query.call_args_list[1].args[1]['filter'])
             self.assertEqual(query.call_args_list[2].args[1]['after'], 'next')
 
     def test_unknown_rich_identity_is_an_error(self):

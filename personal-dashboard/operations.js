@@ -8,7 +8,18 @@ function number(value){return Number(value||0).toLocaleString('en-GB',{notation:
 function bytes(value){return (value/1073741824).toFixed(1)+' GB';}
 function date(value){return value?new Date(value).toLocaleString('en-GB',{timeZone:'Europe/London',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Not supplied';}
 function safeLink(url){try{var u=new URL(url);return u.protocol==='https:'&&u.hostname==='linear.app'?esc(u.href):'';}catch(e){return '';}}
+function todayUsage(source){
+ var windows=source.windows||[],w=windows.find(function(row){return row.name==='codex'&&row.minutes===10080;})||windows.find(function(row){return row.name==='codex';})||windows[0];
+ var stale=Date.now()-new Date(source.updatedAt).getTime()>900000,unavailable=source.status!=='ok'||!w;
+ $('today-codex-bar').hidden=!w;
+ if(w){$('today-codex-bar').value=w.usedPercent;$('today-codex-bar').setAttribute('aria-label','Codex '+w.usedPercent+' percent used');}
+ $('today-codex-label').textContent=w?'Codex · '+Math.round(w.usedPercent)+'% used':'Codex · unavailable';
+ $('today-codex-note').textContent=unavailable||stale?'Last reading · connection unavailable':(w.minutes===10080?'Weekly':w.minutes===300?'5-hour':w.minutes?w.minutes/60+'-hour':'Allowance')+' · '+Math.round(w.remainingPercent)+'% left';
+ $('today-codex').classList.toggle('usage-stale',unavailable||stale);
+ $('today-codex').title=stamp(source,'Codex');
+}
 function usage(source){
+ todayUsage(source);
  var windows=source.windows||[],tokens=source.dailyTokens||[],max=Math.max.apply(null,[1].concat(tokens.map(function(r){return r.tokens;})));
  var card='<article class="usage-card"><p class="eyebrow">CHATGPT PLAN · CODEX</p><h2>Codex'+(source.plan?' <span class="small-pill">'+esc(source.plan)+'</span>':'')+'</h2>';
  card+=windows.length?windows.map(function(w){var mins=w.minutes,label=mins===10080?'Weekly allowance':mins===300?'5-hour allowance':mins?number(mins/60)+'-hour allowance':'Allowance';return '<div class="allowance"><div class="allowance-head"><span>'+esc(label)+'</span><strong class="'+(w.remainingPercent<=10?'warning-text':'')+'">'+Math.round(w.remainingPercent)+'% left</strong></div><progress max="100" value="'+w.usedPercent+'" aria-label="'+esc(label)+' used '+w.usedPercent+' percent"></progress><p class="source-status">'+esc(w.name)+' · '+Math.round(w.usedPercent)+'% used<br>Resets '+esc(date(w.resetsAt))+' London time</p></div>';}).join(''):'<p class="empty">Allowance unavailable. We’ll retry automatically.</p>';
@@ -22,13 +33,15 @@ function linear(source){
  var selected=$('linear-project').value,projects=[...new Set((source.items||[]).map(function(r){return r.project&&r.project.name||'No project';}))].sort();
  $('linear-project').innerHTML='<option value="">All projects</option>'+projects.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>';}).join('');
  if(projects.indexOf(selected)>=0)$('linear-project').value=selected;
- renderIssues();$('linear-status').textContent=stamp(source,'Assigned to Rich');
+ renderIssues();
 }
 function renderIssues(){
  if(!data)return;var source=data.linear||{},project=$('linear-project').value,status=$('linear-state').value,today=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
- var items=(source.items||[]).filter(function(r){return (!project||(r.project&&r.project.name||'No project')===project)&&(!status||r.state.type===status);});
+ var cycleOnly=$('linear-cycle').checked,mineOnly=$('linear-assignee').checked;
+ var items=(source.items||[]).filter(function(r){return (!cycleOnly||r.cycle&&r.cycle.isActive)&&(!mineOnly||r.assignee&&r.assignee.id===source.richId)&&(!project||(r.project&&r.project.name||'No project')===project)&&(!status||r.state.type===status);});
+ $('linear-status').textContent=stamp(source,(cycleOnly?'Current cycle':'All cycles')+' · '+(mineOnly?'Assigned to you':'Anyone, including unassigned'));
  $('linear-count').textContent=items.length;
- $('linear-list').innerHTML=items.length?items.map(function(r){var overdue=r.dueDate&&r.dueDate<today,link=safeLink(r.url);return '<article class="issue-row"><div class="issue-heading"><span class="issue-id">'+esc(r.identifier)+'</span><span class="small-pill">'+esc(r.state.name)+'</span>'+(overdue?'<span class="small-pill alert-pill">Overdue</span>':'')+'</div><h2>'+(link?'<a href="'+link+'" target="_blank" rel="noopener noreferrer">'+esc(r.title)+'</a>':esc(r.title))+'</h2><p>'+esc(r.team.name)+(r.project?' · '+esc(r.project.name):'')+(r.priority?' · '+['','Urgent','High','Normal','Low'][r.priority]:'')+(r.dueDate?' · Due '+esc(r.dueDate):'')+'</p></article>';}).join(''):'<p class="empty">'+(source.status==='error'?'Linear connection unavailable. We’ll retry automatically.':'No open issues match this view.')+'</p>';
+ $('linear-list').innerHTML=items.length?items.map(function(r){var overdue=r.dueDate&&r.dueDate<today,link=safeLink(r.url);return '<article class="issue-row"><div class="issue-heading"><span class="issue-id">'+esc(r.identifier)+'</span><span class="small-pill">'+esc(r.state.name)+'</span>'+(overdue?'<span class="small-pill alert-pill">Overdue</span>':'')+'</div><h2>'+(link?'<a href="'+link+'" target="_blank" rel="noopener noreferrer">'+esc(r.title)+'</a>':esc(r.title))+'</h2><p>'+esc(r.team.name)+(r.project?' · '+esc(r.project.name):'')+(r.priority?' · '+['','Urgent','High','Normal','Low'][r.priority]:'')+' · '+esc(r.assignee&&(r.assignee.displayName||r.assignee.name)||'Unassigned')+(r.cycle?' · '+esc(r.cycle.name||'Cycle '+r.cycle.number):' · No cycle')+(r.dueDate?' · Due '+esc(r.dueDate):'')+'</p></article>';}).join(''):'<p class="empty">'+(source.status==='error'?'Linear connection unavailable. We’ll retry automatically.':'No open issues match this view.')+'</p>';
 }
 function stat(title,value,note,warning){return '<article class="health-stat'+(warning?' warn':'')+'"><p class="eyebrow">'+esc(title)+'</p><strong>'+esc(value)+'</strong><span>'+esc(note)+'</span></article>';}
 function tara(source){
@@ -47,11 +60,12 @@ function renderTasks(){
 async function refresh(){
  if(railOnly||busy)return;busy=true;
  try{var response=await fetch('/api/operations',{cache:'no-store'});if(!response.ok)throw new Error();data=await response.json();usage(data.usage||{status:'error'});linear(data.linear||{status:'error'});tara(data.tara||{status:'error'});}
- catch(e){['usage-status','linear-status','tara-status'].forEach(function(id){$(id).textContent='Connection lost · showing the last available view';});$('health-banner').classList.add('warn');$('health-banner').textContent='Health connection lost · last reading may be out of date';}
+ catch(e){$('today-codex-note').textContent='Connection lost · last reading';$('today-codex').classList.add('usage-stale');['usage-status','linear-status','tara-status'].forEach(function(id){$(id).textContent='Connection lost · showing the last available view';});$('health-banner').classList.add('warn');$('health-banner').textContent='Health connection lost · last reading may be out of date';}
  finally{busy=false;}
 }
 document.querySelectorAll('.ops-refresh').forEach(function(button){button.addEventListener('click',refresh);});
-['linear-project','linear-state'].forEach(function(id){$(id).addEventListener('change',renderIssues);});
+['linear-project','linear-state','linear-cycle','linear-assignee'].forEach(function(id){$(id).addEventListener('change',renderIssues);});
 document.querySelectorAll('[data-task-filter]').forEach(function(button){button.addEventListener('click',function(){taskFilter=button.dataset.taskFilter;document.querySelectorAll('[data-task-filter]').forEach(function(b){b.classList.toggle('selected',b===button);});renderTasks();});});
+$('today-codex').addEventListener('click',function(){window.openLifeTab('usage');});
 refresh();setInterval(refresh,30000);
 })();

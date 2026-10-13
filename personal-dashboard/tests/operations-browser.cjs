@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
-const out='/home/adminrichwebb/.openclaw/workspace/outputs/photo-frame-2026-10-13/three-tabs';
+const out=process.env.FRAME_OPERATIONS_PROOF_DIR||'/home/adminrichwebb/.openclaw/workspace/outputs/photo-frame-2026-10-13/three-tabs';
 const base='http://127.0.0.1:8788';
 (async()=>{
 const key=JSON.parse(fs.readFileSync(path.join(root,'.state/access.json'))).key;
@@ -43,8 +43,20 @@ try {
  }
  await page.setViewportSize({width:1024,height:600});await page.locator('[data-tab="linear"]').click();
  await page.locator('#linear-state').selectOption('started');
- const started=live.linear.items.filter(r=>r.state.type==='started').length;
+ const started=live.linear.items.filter(r=>r.state.type==='started'&&r.cycle&&r.cycle.isActive&&r.assignee&&r.assignee.id===live.linear.richId).length;
  assert.equal(Number(await page.locator('#linear-count').textContent()),started);
+ assert.equal(await page.locator('#linear-cycle').isChecked(),true);assert.equal(await page.locator('#linear-assignee').isChecked(),true);
+ await page.locator('#linear-state').selectOption('');
+ const mine=live.linear.items.filter(r=>r.assignee&&r.assignee.id===live.linear.richId);
+ const current=live.linear.items.filter(r=>r.cycle&&r.cycle.isActive);
+ assert.equal(Number(await page.locator('#linear-count').textContent()),mine.filter(r=>r.cycle&&r.cycle.isActive).length);
+ await page.locator('#linear-cycle').uncheck();assert.equal(Number(await page.locator('#linear-count').textContent()),mine.length);
+ await page.locator('#linear-assignee').uncheck();assert.equal(Number(await page.locator('#linear-count').textContent()),live.linear.items.length);
+ await page.locator('#linear-cycle').check();assert.equal(Number(await page.locator('#linear-count').textContent()),current.length);
+ await page.locator('#linear-cycle').uncheck();
+ await page.locator('[data-tab="today"]').click();
+ assert.equal(Number(await page.locator('#today-codex-bar').getAttribute('value')),live.usage.windows[0].usedPercent);
+ await page.locator('#today-codex').click();assert.equal(await page.locator('#usage-view').isVisible(),true);
  await page.locator('[data-tab="tara"]').click();await page.locator('[data-task-filter="needsAttention"]').click();
  assert.equal(await page.locator('#tara-list .issue-row').count(),live.tara.needsAttention.length);
  // Exercise safe rendering of untrusted source titles and stale/error health.
@@ -53,7 +65,7 @@ try {
  await page.route('**/api/operations',r=>r.fulfill({json:synthetic}));
  await page.locator('.ops-refresh[aria-label="Refresh Tara health"]').click();
  await page.waitForFunction(()=>document.querySelector('#health-banner').textContent.includes('stale'));
- assert.equal(await page.locator('#linear-list img').count(),0);
+ assert.equal(await page.locator('#linear-list img').count(),0);assert.ok((await page.locator('#linear-list').textContent()).includes(synthetic.linear.items[0].title));
  await page.unroute('**/api/operations');
  // Simulate the installed Java shell: only Today/TEAMTRI are recognised.
  const content=await context.newPage();await content.setViewportSize({width:1138,height:800});
@@ -84,7 +96,7 @@ try {
  // Restore the navigation state without touching the actual frame.
  await context.request.post(base+'/api/navigation',{headers:{Origin:base},data:{tab:'today'}});
  assert.deepEqual(errors,[]);
- fs.writeFileSync(path.join(out,'browser-proof.json'),JSON.stringify({passed:true,layouts,checks:['live feeds','filters','safe text','private endpoints','same-origin navigation','native shell simulation','stale health labelling'],physicalFrameTested:false,macUsed:false},null,2));
+ fs.writeFileSync(path.join(out,'browser-proof.json'),JSON.stringify({passed:true,layouts,checks:['live feeds','cycle/assignee defaults and all four combinations','Today Codex bar and navigation','filters','safe text','private endpoints','same-origin navigation','native shell simulation','stale health labelling'],physicalFrameTested:false,macUsed:false},null,2));
  console.log('PASS: nine layouts, live feeds, filters, privacy, safe text and native shell simulation');
 }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -47,10 +47,9 @@ def fetch_linear():
     if len(users) != 1:
         raise RuntimeError('Rich assignment unavailable')
     query = '''query($filter:IssueFilter,$after:String){issues(first:100,filter:$filter,after:$after,orderBy:updatedAt){
-      nodes{identifier title priority url dueDate updatedAt state{name type} team{name key} project{name}}
+      nodes{identifier title priority url dueDate updatedAt state{name type} team{name key} project{name} assignee{id name displayName} cycle{id number name isActive}}
       pageInfo{hasNextPage endCursor}}}'''
-    variables = {'filter': {'assignee': {'id': {'eq': users[0]['id']}},
-                           'state': {'type': {'nin': ['completed', 'canceled']}}}, 'after': None}
+    variables = {'filter': {'state': {'type': {'nin': ['completed', 'canceled']}}}, 'after': None}
     items = []
     for _ in range(5):
         page = linear_query(query, variables)['issues']
@@ -64,7 +63,7 @@ def fetch_linear():
     items.sort(key=lambda row: (not bool(row.get('dueDate') and row['dueDate'] < today),
                                row['state']['type'] != 'started', row.get('priority') or 99,
                                row.get('dueDate') or '9999', row['identifier']))
-    return {'status': 'ok', 'updatedAt': now(), 'assignee': 'Rich', 'items': items}
+    return {'status': 'ok', 'updatedAt': now(), 'assignee': 'Rich', 'richId': users[0]['id'], 'items': items}
 
 
 def codex_executable():
