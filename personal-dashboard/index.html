@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Rich · Today</title><link rel="stylesheet" href="style.css"><script src="app.js" defer></script></head>
+<body>
+<svg class="symbols" aria-hidden="true"><defs>
+<symbol id="i-today" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 11h18m-13 5h2m4 0h2"/></symbol>
+<symbol id="i-team" viewBox="0 0 24 24"><circle cx="9" cy="7" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m2-17a3 3 0 0 1 0 6m2 4a5 5 0 0 1 2 4v3"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 13a9 9 0 0 1-10-10 9 9 0 1 0 10 10Z"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 8A9 9 0 0 0 4 6L2 9m0-6v6h6m-4 7a9 9 0 0 0 16 2l2-3m0 6v-6h-6"/></symbol>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 64 64"><path d="M16 48a12 12 0 1 1 3-24 18 18 0 0 1 35 5 10 10 0 0 1-1 19Z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 64 64"><circle cx="32" cy="32" r="13"/><path d="M32 3v8m0 42v8M3 32h8m42 0h8M11 11l6 6m30 30 6 6M11 53l6-6m30-30 6-6"/></symbol>
+</defs></svg>
+<div class="shell">
+<aside class="rail" aria-label="Dashboard navigation">
+<div class="brand"><img src="assets/brand-icon.png" alt="PerformanceNinja"><span>PERFORMANCE<br><b>NINJA</b></span></div>
+<nav><button class="tab active" data-tab="today" aria-current="page"><svg><use href="#i-today"/></svg><span>Today</span></button><button class="tab" data-tab="teamtri"><svg><use href="#i-team"/></svg><span>TEAMTRI</span></button></nav>
+<div class="rail-bottom"><button class="ambient-button" aria-label="Open ambient clock"><svg><use href="#i-moon"/></svg><span>Ambient</span></button><time class="rail-clock">--:--</time><div class="rail-day">Tuesday</div><span class="timezone">LONDON TIME</span></div>
+</aside>
+<main>
+<section id="today-view" class="view">
+<header class="page-header"><div><p class="eyebrow" id="date-label">TODAY</p><h1>Your day, at a glance.</h1></div><button id="refresh" class="icon-button" aria-label="Refresh dashboard"><svg><use href="#i-refresh"/></svg></button></header>
+<div class="dashboard-grid">
+<section class="next-card" aria-labelledby="next-heading"><div class="card-top"><span class="eyebrow">WHAT'S NEXT</span><div class="next-top-times"><span id="next-time" class="next-time"></span><span id="next-countdown" class="pill">Next up</span></div></div><div class="next-body"><h2 id="next-heading">Getting your day ready…</h2><p id="next-detail" class="next-detail">Connecting your calendar and reminders.</p></div><div class="next-foot"><span id="next-source">Calendar + Apple Reminders</span><button id="next-more" aria-label="View Next up details"><svg><use href="#i-arrow"/></svg></button></div></section>
+<section class="weather-card" aria-labelledby="weather-place"><div class="card-top"><span class="eyebrow" id="weather-place">LONDON</span><span class="weather-provider" id="weather-status">Weather</span></div><div class="weather-main"><span id="weather-temp">—°</span><svg id="weather-icon"><use href="#i-cloud"/></svg></div><h2 id="weather-condition">Connecting…</h2><p id="weather-range">Local forecast</p><div id="weather-forecast" class="forecast"></div></section>
+<section class="list-card calendar-card" aria-labelledby="calendar-heading"><div class="list-header"><div><p class="eyebrow">ON THE DIARY</p><h2 id="calendar-heading">Calendar</h2></div><span class="count" id="calendar-count">—</span></div><div class="list-content" id="calendar-list"><p class="empty">Loading your calendar…</p></div><p id="calendar-status" class="source-status">Read-only calendar</p></section>
+<section class="list-card reminders-card" aria-labelledby="reminders-heading"><div class="list-header"><div><p class="eyebrow">KEEP THINGS MOVING</p><h2 id="reminders-heading">Reminders</h2></div><span class="count purple" id="reminders-count">—</span></div><div class="list-content" id="reminders-list"><p class="empty">Connecting Apple Reminders…</p></div><p id="reminders-status" class="source-status">Read-only Apple Reminders</p></section>
+</div>
+<footer class="page-footer"><span><i class="status-dot"></i><span id="overall-status">Connecting your sources</span></span><span id="updated-label">Europe/London</span></footer>
+</section>
+<section id="teamtri-view" class="view" hidden><header class="page-header"><div><p class="eyebrow">YOUR TEAM, CONNECTED</p><h1>TEAMTRI Dashboard</h1></div></header><div class="teamtri-card"><svg><use href="#i-team"/></svg><h2>Your live TEAMTRI view</h2><p>Open the existing TEAMTRI site in a full-screen view. Your sign-in stays with TEAMTRI.</p><a href="https://teamtri.team/people-dashboard" class="primary-link">Open TEAMTRI Dashboard <span>↗</span></a><p class="source-status">The existing site opens separately. Embedded sign-in is not connected yet.</p></div></section>
+</main>
+</div>
+<button id="ambient" hidden aria-label="Tap to return to your dashboard"><span class="ambient-brand">PERFORMANCE NINJA</span><span class="ambient-inner"><time id="ambient-time">--:--</time><span id="ambient-date"></span><span id="ambient-next"></span></span><span class="ambient-hint">Touch to return</span></button>
+<dialog id="next-dialog"><div class="dialog-top"><p class="eyebrow">NEXT UP</p><button id="close-detail" aria-label="Close event details">×</button></div><h2 id="detail-title"></h2><p id="detail-time"></p><p id="detail-location"></p><p id="detail-source" class="source-status"></p></dialog>
+</body></html>
