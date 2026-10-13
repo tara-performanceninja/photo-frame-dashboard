@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
-const out='/home/adminrichwebb/.openclaw/workspace/outputs/photo-frame-2026-10-13/customisation';
+const out=process.env.FRAME_PROOF_DIR||'/home/adminrichwebb/.openclaw/workspace/outputs/photo-frame-2026-10-13/customisation';
 const base='http://127.0.0.1:8788';
 (async()=>{
 const key=JSON.parse(fs.readFileSync(path.join(root,'.state/access.json'))).key;
@@ -19,7 +19,7 @@ try{
  await context.addCookies([{name:'frame_session',value:key,url:base,httpOnly:true,sameSite:'Strict'}]);
  assert.equal((await context.request.get(base+'/.state/access.json')).status(),404);
  assert.equal((await context.request.get(base+'/server.py')).status(),404);
- assert.equal((await context.request.post(base+'/api/today')).status(),501);
+ assert.equal((await context.request.post(base+'/api/today')).status(),405);
  await page.setViewportSize({width:1024,height:600});
  await page.goto(base);await page.waitForFunction(()=>document.querySelector('#overall-status').textContent!=='Connecting your sources');await page.evaluate(()=>document.fonts.ready);
  const data=await (await context.request.get(base+'/api/today')).json();assert.equal(data.calendar.status,'ok');assert.equal(data.weather.status,'ok');assert.equal(data.reminders.status,'snapshot');

@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import secrets
 import subprocess
+import sys
 import threading
 import time
 from urllib.parse import parse_qs, urlsplit
@@ -19,6 +20,9 @@ from urllib.request import urlopen
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+from operations import fetch_linear, fetch_usage, fetch_tara
+
 STATE = ROOT / '.state'
 TZ = ZoneInfo('Europe/London')
 GWS = '/home/adminrichwebb/.npm-global/bin/gws'
@@ -105,14 +109,13 @@ def fetch_weather():
 
 class Sources:
     def __init__(self):
-        self.lock=threading.Lock();self.data={'calendar':{'status':'error','items':[]},'weather':{'status':'error'},'reminders':{'status':'error','items':[]},'generatedAt':iso_now()}
+        self.lock=threading.Lock();self.health_at=0;self.data={'calendar':{'status':'error','items':[]},'weather':{'status':'error'},'reminders':{'status':'error','items':[]},'generatedAt':iso_now()}
         try:self.data.update(json.loads((STATE/'cache.json').read_text()))
         except (OSError,ValueError):pass
-        self.refresh()
 
     def refresh(self):
-        with ThreadPoolExecutor(max_workers=2) as pool:
-            futures={'calendar':pool.submit(fetch_calendars),'weather':pool.submit(fetch_weather)}
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            futures={'calendar':pool.submit(fetch_calendars),'weather':pool.submit(fetch_weather),'linear':pool.submit(fetch_linear),'usage':pool.submit(fetch_usage)}
             for key,future in futures.items():
                 try:result=future.result()
                 except Exception:
@@ -129,7 +132,17 @@ class Sources:
     def snapshot(self):
         with self.lock:return json.dumps(self.data).encode()
 
+    def operations(self):
+        with self.lock:
+            if time.monotonic()-self.health_at > 30:
+                try:self.data['tara']=fetch_tara();self.health_at=time.monotonic()
+                except Exception:
+                    previous=dict(self.data.get('tara',{}));previous['status']='error';self.data['tara']=previous
+            return json.dumps({key:self.data.get(key,{'status':'error'}) for key in ('linear','usage','tara')}).encode()
+
     def loop(self):
+        try:self.refresh()
+        except Exception:pass
         while True:
             time.sleep(300)
             try:self.refresh()
@@ -151,33 +164,62 @@ class Handler(BaseHTTPRequestHandler):
         for k,v in (headers or {}).items():self.send_header(k,v)
         self.end_headers();self.wfile.write(body)
 
-    def do_GET(self):
+    def authorised(self):
         addr=ipaddress.ip_address(self.client_address[0])
         allowed=addr.is_loopback or addr in ipaddress.ip_network('192.168.50.0/24') or addr in ipaddress.ip_network('100.64.0.0/10')
         host=(self.headers.get('Host') or '').split(':')[0]
         if not allowed or host not in self.server.allowed_hosts:
-            return self.send(403,b'Not available')
-        url=urlsplit(self.path);query=parse_qs(url.query)
-        if 'key' in query:
-            if not secrets.compare_digest(query['key'][0],self.server.access_key):return self.send(403,b'Access not recognised')
-            dest='/?rail=1' if 'rail' in query else '/?content=1' if 'content' in query else '/'
-            return self.send(303,headers={'Location':dest,'Set-Cookie':'frame_session='+self.server.access_key+'; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000'})
+            self.send(403,b'Not available');return False
         cookies=SimpleCookie()
         try:cookies.load(self.headers.get('Cookie',''))
-        except Exception:return self.send(403,b'Private dashboard')
+        except Exception:self.send(403,b'Private dashboard');return False
         cookie=cookies.get('frame_session')
         # Tailscale Serve strips client-supplied identity headers. Trust them only
         # from the loopback proxy, for the named tailnet owner and exact HTTPS host.
         tail_owner=bool(self.server.tail_owner) and addr.is_loopback and host==self.server.tail_host and self.headers.get('Tailscale-User-Login')==self.server.tail_owner
-        if not tail_owner and (not cookie or not secrets.compare_digest(cookie.value,self.server.access_key)):return self.send(403,b'Private dashboard. Open the private launch link on this device.')
+        if not tail_owner and (not cookie or not secrets.compare_digest(cookie.value,self.server.access_key)):
+            self.send(403,b'Private dashboard. Open the private launch link on this device.');return False
+        return True
+
+    def do_GET(self):
+        url=urlsplit(self.path);query=parse_qs(url.query)
+        if 'key' in query:
+            addr=ipaddress.ip_address(self.client_address[0]);host=(self.headers.get('Host') or '').split(':')[0]
+            if host not in self.server.allowed_hosts or not (addr.is_loopback or addr in ipaddress.ip_network('192.168.50.0/24') or addr in ipaddress.ip_network('100.64.0.0/10')):return self.send(403,b'Not available')
+            if not secrets.compare_digest(query['key'][0],self.server.access_key):return self.send(403,b'Access not recognised')
+            dest='/?rail=1' if 'rail' in query else '/?content=1' if 'content' in query else '/'
+            return self.send(303,headers={'Location':dest,'Set-Cookie':'frame_session='+self.server.access_key+'; HttpOnly; SameSite=Strict; Path=/; Max-Age=31536000'})
+        if not self.authorised():return
+        if url.path=='/api/operations':return self.send(200,self.server.sources.operations(),'application/json')
+        if url.path=='/api/navigation':
+            with self.server.nav_lock:body=json.dumps(self.server.navigation).encode()
+            return self.send(200,body,'application/json')
         if url.path=='/api/today':return self.send(200,self.server.sources.snapshot(),'application/json')
         if url.path=='/':path=ROOT/'index.html'
-        elif url.path in ('/style.css','/app.js','/assets/brand-icon.png','/assets/Montserrat.ttf'):path=ROOT/url.path[1:]
+        elif url.path in ('/style.css','/app.js','/operations.js','/assets/brand-icon.png','/assets/Montserrat.ttf'):path=ROOT/url.path[1:]
         else:return self.send(404,b'Not found')
         kinds={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.ttf':'font/ttf'}
         try:body=path.read_bytes()
         except OSError:return self.send(404,b'Not found')
         self.send(200,body,kinds[path.suffix])
+
+    def do_POST(self):
+        if not self.authorised():return
+        if urlsplit(self.path).path != '/api/navigation':return self.send(405,b'Read-only data')
+        # Browser-only, same-origin navigation. No writes to third-party services.
+        origin=urlsplit(self.headers.get('Origin',''))
+        if origin.netloc != self.headers.get('Host') or origin.scheme not in ('http','https'):
+            return self.send(403,b'Same-origin navigation required')
+        try:
+            size=int(self.headers.get('Content-Length','0'))
+            if not 0 < size <= 256:raise ValueError()
+            tab=json.loads(self.rfile.read(size)).get('tab')
+            if tab not in ('today','teamtri','usage','linear','tara'):raise ValueError()
+        except (ValueError,AttributeError):return self.send(400,b'Unknown tab')
+        with self.server.nav_lock:
+            self.server.navigation={'tab':tab,'revision':self.server.navigation['revision']+1}
+            body=json.dumps(self.server.navigation).encode()
+        self.send(200,body,'application/json')
 
 
 def main():
@@ -197,6 +239,7 @@ def main():
     sources=Sources();threading.Thread(target=sources.loop,daemon=True).start()
     server=ThreadingHTTPServer((args.bind,args.port),Handler)
     server.access_key=key;server.sources=sources
+    server.nav_lock=threading.Lock();server.navigation={'tab':'today','revision':int(time.time()*1000)}
     server.tail_host=settings.get('tailHost');server.tail_owner=settings.get('tailOwner')
     server.allowed_hosts={'127.0.0.1','localhost','192.168.50.111','192.168.50.103','100.91.58.81','tara.local'}
     if server.tail_host:server.allowed_hosts.add(server.tail_host)

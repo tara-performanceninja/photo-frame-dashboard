@@ -6,7 +6,7 @@ PerformanceNinja-branded, lightweight dashboard built on Tara for the 1024 × 60
 
 - Private preview: https://tara.tail1bbd6f.ts.net:8443/
 - Today: live calendar, live London weather, Next up and a dated Apple Reminders snapshot.
-- Left navigation: Today and TEAMTRI.
+- Left navigation: Today, TEAMTRI, AI usage, Linear and Tara.
 - On the frame, Home HQ 1.3-life displays TEAMTRI in a separate first-party WebView beside the fixed Life menu. Sign-in persists. Today returns to the day view, including from ambient mode. Controls opens the existing launcher/settings menu. An ordinary browser still offers the original external link because Strict session cookies prevent a straightforward cross-site iframe. Production TEAMTRI authentication and cookies are unchanged.
 - Ambient: two-minute idle clock, tap to return, night colours between 22:00 and 06:00 London time, small periodic content movement.
 - Source uses HTML/CSS/JavaScript without a bundler or frontend framework. Assets, including Montserrat and the original brand icon, are local. No Google Fonts dependency.
@@ -65,3 +65,19 @@ The canonical integrated app source is now in this Tara checkout. The original M
 The Mac's standard Java command route was denied by its approval binding. Compilation therefore ran on Tara using ECJ, Java D8 and apksigner, with the existing Mac-generated resource APK and Android platform classes. The existing signing key was used through a temporary private transfer, then that copy was removed. No new key was generated. Normal Mac USB ADB installed the signed update without clearing app data. The prior APK is retained for recovery.
 
 Evidence: `life-teamtri-final-device.png`, `life-controls-device.png`, `life-launcher-device.png`, `life-startup-settled-device.png`, and `life-navigation-proved-device.png`. The reboot check exposed and resolved a menu Wi-Fi startup retry gap. A final navigation check exposed and resolved Today returning to the idle clock. The frame was left on Today. `homehq-life.apk` is the final update, while `homehq-original.apk` is the pre-update recovery copy. Preserve the signing key and avoid signing with a fresh default key.
+
+
+## AI usage, Linear and Tara, 13 October 2026
+
+Built and deployed entirely on Tara, without Mac access or an Android app update.
+
+- **AI usage:** live Codex subscription windows, percentage remaining, London reset times, available reset count and provider-reported daily token activity. The collector uses the documented `account/rateLimits/read` and `account/usage/read` methods, starts no model turn and strips account identifiers, raw credits and credentials. These are the account used by Tara, not separate ChatGPT conversation limits or API billing. Provider daily buckets use UTC dates and today is incomplete.
+- **Cursor:** clearly unavailable. The existing Cloud Agent credential returned HTTP 401 from the documented Admin API member read. No Admin usage credential is configured. No sample or estimated allowance is presented.
+- **Linear:** live open issues assigned specifically to Rich, across visible projects and cycles. Includes status, project, priority and due date, with project/status filters. Pagination is bounded and incomplete pages are errors, not a complete empty list. Current connection sees Automation Geeks.
+- **Tara:** fresh Pi readings for temperature, memory, storage, swap, load, uptime, OpenClaw service and voltage/thermal flags. Threshold alerts and stale/error labels. Work queue, waiting/blocked items and recent completions come from the task register, not a claimed live execution feed. Service status is not a full OpenClaw application health audit.
+
+The service serves its saved cache immediately on startup while live feeds reconnect in the background. Calendar, weather, Linear and Codex collectors refresh every five minutes. Health refreshes at most every 30 seconds, on browser requests. Refresh buttons reload the current server feed without making a provider request per tap. There is no new cron or Gateway change.
+
+The installed Java shell recognises only Today/TEAMTRI. The web rail selects the existing Today pane and sends the desired tab through an authenticated same-origin navigation endpoint. Content and rail poll it once per second. It supports the single configured frame session. This endpoint only changes display navigation. All source data stays read-only. Hidden TEAMTRI time is excluded from the content page idle switch to avoid menu drift.
+
+The existing loaded frame pages cannot acquire new JavaScript by polling data alone. **Reload or restart the frame once to pick up this release**, with no Mac required. No physical frame check was made for these tabs. Local browser proof covers nine layouts, two-pane native-shell simulation, filters, safe rendering, stale health and endpoint access controls. Evidence is `outputs/photo-frame-2026-10-13/three-tabs/`. The previous five source files are retained there as `.before` rollback copies. Only the dashboard user service was restarted. The OpenClaw Gateway was untouched.
