@@ -7,7 +7,7 @@ PerformanceNinja-branded, lightweight dashboard built on Tara for the 1024 × 60
 - Private preview: https://tara.tail1bbd6f.ts.net:8443/
 - Today: live calendar, live London weather, Next up and a dated Apple Reminders snapshot.
 - Left navigation: Today and TEAMTRI.
-- TEAMTRI currently provides a link to the original protected site. **It is not yet an embedded, signed-in dashboard.** Opening the original site leaves the shell. Its Strict session cookie prevents a straightforward cross-site iframe. No production authentication or cookie settings were changed.
+- On the frame, Home HQ 1.3-life displays TEAMTRI in a separate first-party WebView beside the fixed Life menu. Sign-in persists. Today returns to the day view, including from ambient mode. Controls opens the existing launcher/settings menu. An ordinary browser still offers the original external link because Strict session cookies prevent a straightforward cross-site iframe. Production TEAMTRI authentication and cookies are unchanged.
 - Ambient: two-minute idle clock, tap to return, night colours between 22:00 and 06:00 London time, small periodic content movement.
 - Source uses HTML/CSS/JavaScript without a bundler or frontend framework. Assets, including Montserrat and the original brand icon, are local. No Google Fonts dependency.
 
@@ -17,7 +17,7 @@ Calendar reads use the existing authenticated `gws` connection for Personal, TEA
 
 Weather uses Open-Meteo. **London is the initial location**, not a verified precise home location. Weather and calendar refresh on Tara every five minutes. The browser reloads the current cache every minute.
 
-Reminders currently contains the five upcoming-week entries from the authorised Mac read taken before Rich asked to stop Mac work. It does not contain overdue or undated reminders and does not refresh automatically. The UI labels it as a snapshot and adds an age warning. It is read-only, with no misleading completion controls. Continuous Apple Reminders sync requires a supported source route. No further Mac commands were run after Rich's instruction.
+Reminders currently contains the five upcoming-week entries from the authorised Mac read taken before Rich asked to stop Mac work. It does not contain overdue or undated reminders and does not refresh automatically. The UI labels it as a snapshot and adds an age warning. It is read-only, with no misleading completion controls. Continuous Apple Reminders sync requires a supported source route. The initial web build stayed on Tara. Rich later authorised Mac access to switch and update the frame.
 
 All personal cache, access keys and Tailscale identity metadata live in ignored `.state/` files, with restricted file permissions. They are excluded from the release archive and Git. Calendar OAuth stays in its existing host-owned location and never reaches the browser. The HTTP server allowlists assets rather than exposing a directory tree. API writes are not implemented.
 
@@ -40,7 +40,7 @@ For a local-only manual run:
 python3 server.py --bind 127.0.0.1 --port 8788
 ```
 
-A LAN device launch link can be generated locally from `.state/access.json` when installation on the frame is authorised. Do not paste or log its access key publicly. The frame has **not** been switched to this dashboard yet.
+A LAN device launch link can be generated locally from `.state/access.json` when installation on the frame is authorised. Do not paste or log its access key publicly. The frame runs this dashboard. Its launch URL is saved privately in Home HQ preferences and automatic Home-app startup has been verified after reboot. Both content and menu retry failed loads while Wi-Fi starts.
 
 ## Brand source
 
@@ -54,4 +54,14 @@ node --check app.js
 python3 /home/adminrichwebb/.openclaw/workspace/worktrees/pn-toolkit-continuation/scripts/run-verification.py --timeout 120 -- node /home/adminrichwebb/.openclaw/workspace/projects/photo-frame-dashboard/personal-dashboard/tests/browser.cjs
 ```
 
-Proof and screenshots: `outputs/photo-frame-2026-10-13/customisation/` in the Tara workspace. Browser checks cover 1024 × 600, 1280 × 800, 1440 × 900 and 390 × 844, tabs, ambient touch/idle, full event details, long titles, safe text rendering, empty/error states and data access controls. List panels deliberately scroll. Very long Next up titles use a three-line summary with the full title available from the details arrow. No on-device browser or TEAMTRI authenticated rendering proof is claimed.
+Proof and screenshots: `outputs/photo-frame-2026-10-13/customisation/` in the Tara workspace. Browser checks cover 1024 × 600, 1280 × 800, 1440 × 900 and 390 × 844, tabs, ambient touch/idle, full event details, long titles, safe text rendering, empty/error states and data access controls. List panels deliberately scroll. Very long Next up titles use a three-line summary with the full title available from the details arrow. Device proof now includes signed-in TEAMTRI with the Life menu, Controls/launcher, boot recovery and Today navigation. Screenshots are in the same evidence folder.
+
+## Persistent Life menu update, 13 October
+
+Installed Home HQ 1.3-life (version code 4) with the original signing certificate, home registration and exact modified exit-gesture code retained. The app uses `../dashboard/kiosk/src/com/wesbos/homehq/LifeShell.java` for separate first-party Today and TEAMTRI panes alongside the branded menu. TEAMTRI receives no JavaScript bridge. Only the trusted LAN Life menu receives tab, ambient and Controls actions. No protected TEAMTRI data is proxied.
+
+The canonical integrated app source is now in this Tara checkout. The original Mac source remains unchanged. `../scripts/prepare-life-shell.py` stages a review copy from a pre-update modified MainActivity and refuses unexpected or already-patched source.
+
+The Mac's standard Java command route was denied by its approval binding. Compilation therefore ran on Tara using ECJ, Java D8 and apksigner, with the existing Mac-generated resource APK and Android platform classes. The existing signing key was used through a temporary private transfer, then that copy was removed. No new key was generated. Normal Mac USB ADB installed the signed update without clearing app data. The prior APK is retained for recovery.
+
+Evidence: `life-teamtri-final-device.png`, `life-controls-device.png`, `life-launcher-device.png`, `life-startup-settled-device.png`, and `life-navigation-proved-device.png`. The reboot check exposed and resolved a menu Wi-Fi startup retry gap. A final navigation check exposed and resolved Today returning to the idle clock. The frame was left on Today. `homehq-life.apk` is the final update, while `homehq-original.apk` is the pre-update recovery copy. Preserve the signing key and avoid signing with a fresh default key.

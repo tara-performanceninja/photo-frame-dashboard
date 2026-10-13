@@ -34,11 +34,13 @@ public class MainActivity extends Activity {
   static final float EXIT_SLOP_PX = 60;
 
   private WebView web;
+  private LifeShell lifeShell;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private final int[] exitIds = new int[2];
   private final float[] exitX = new float[2];
   private final float[] exitY = new float[2];
   private boolean exitArmed;
+  private int exitPointerCount = 2;
   private String retryUrl;
 
   private final Runnable retry = new Runnable() {
@@ -52,7 +54,7 @@ public class MainActivity extends Activity {
     @Override
     public void run() {
       exitArmed = false;
-      Log.i(TAG, "Two-finger hold: opening controls");
+      Log.i(TAG, "Exit hold: opening controls");
       new AlertDialog.Builder(MainActivity.this)
           .setTitle("Home HQ")
           .setItems(new String[] {"Open launcher", "Android settings", "Reload dashboard"},
@@ -93,7 +95,11 @@ public class MainActivity extends Activity {
     setContentView(web);
 
     String url = getIntent().getDataString();
-    web.loadUrl(url != null ? url : DEFAULT_URL);
+    if (url == null) url = getPreferences(MODE_PRIVATE).getString("life_start_url", DEFAULT_URL);
+    if (LifeShell.accepts(url)) {
+      getPreferences(MODE_PRIVATE).edit().putString("life_start_url", url).apply();
+      lifeShell = new LifeShell(this, web, url, showControls);
+    } else web.loadUrl(url);
   }
 
   @Override
@@ -117,7 +123,12 @@ public class MainActivity extends Activity {
     String url = intent.getDataString();
     if (url != null) {
       handler.removeCallbacks(retry);
-      web.loadUrl(url);
+      if (LifeShell.accepts(url)) {
+        getPreferences(MODE_PRIVATE).edit().putString("life_start_url", url).apply();
+        recreate();
+      } else if (lifeShell != null && url.startsWith("https://teamtri.team/")) {
+        lifeShell.select("teamtri");
+      } else if (lifeShell == null) web.loadUrl(url);
     }
   }
 
@@ -135,6 +146,7 @@ public class MainActivity extends Activity {
   @Override
   protected void onDestroy() {
     handler.removeCallbacksAndMessages(null);
+    if (lifeShell != null) lifeShell.destroy();
     if (web != null) web.destroy();
     super.onDestroy();
   }
@@ -150,9 +162,21 @@ public class MainActivity extends Activity {
   @Override
   public boolean dispatchTouchEvent(MotionEvent e) {
     switch (e.getActionMasked()) {
+      case MotionEvent.ACTION_DOWN:
+        if (e.getX() < 80 && e.getY() < 80) {
+          exitPointerCount = 1;
+          exitIds[0] = e.getPointerId(0);
+          exitX[0] = e.getX();
+          exitY[0] = e.getY();
+          exitArmed = true;
+          handler.removeCallbacks(showControls);
+          handler.postDelayed(showControls, 5000);
+        }
+        break;
       case MotionEvent.ACTION_POINTER_DOWN:
         if (e.getPointerCount() == 2) {
-          for (int i = 0; i < 2; i++) {
+          exitPointerCount = 2;
+          for (int i = 0; i < exitPointerCount; i++) {
             exitIds[i] = e.getPointerId(i);
             exitX[i] = e.getX(i);
             exitY[i] = e.getY(i);
@@ -166,7 +190,7 @@ public class MainActivity extends Activity {
         break;
       case MotionEvent.ACTION_MOVE:
         if (exitArmed) {
-          for (int i = 0; i < 2; i++) {
+          for (int i = 0; i < exitPointerCount; i++) {
             int idx = e.findPointerIndex(exitIds[i]);
             if (idx < 0 || Math.hypot(e.getX(idx) - exitX[i], e.getY(idx) - exitY[i]) > EXIT_SLOP_PX) {
               cancelExit();
@@ -210,6 +234,7 @@ public class MainActivity extends Activity {
 
   @Override
   public void onBackPressed() {
-    if (web.canGoBack()) web.goBack();
+    if (lifeShell != null) lifeShell.back();
+    else if (web.canGoBack()) web.goBack();
   }
 }

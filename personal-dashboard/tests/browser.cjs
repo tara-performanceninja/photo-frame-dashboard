@@ -63,6 +63,13 @@ try{
  synthetic.calendar.items=[];await page.getByRole('button',{name:'Refresh dashboard'}).click();await page.getByRole('heading',{name:'Nothing else scheduled',exact:true}).waitFor();
  synthetic.calendar.status='error';await page.getByRole('button',{name:'Refresh dashboard'}).click();await page.getByRole('heading',{name:'Calendar unavailable',exact:true}).waitFor();
  await page.unroute('**/api/today');await page.goto(base+'/?rail=1');assert.equal(await page.locator('main').isVisible(),false);await page.goto(base+'/?content=1');assert.equal(await page.locator('.rail').isVisible(),false);
+ await page.addInitScript(()=>{window.Frame={openTab:tab=>window.lastFrameTab=tab,showControls:()=>window.frameControlsOpened=true,showAmbient:()=>window.frameAmbientOpened=true};});
+ await page.setViewportSize({width:142,height:800});await page.goto(base+'/?rail=1');
+ await page.getByRole('button',{name:'Controls',exact:true}).click();assert.equal(await page.evaluate(()=>window.frameControlsOpened),true);
+ await page.getByRole('button',{name:'TEAMTRI',exact:true}).click();assert.equal(await page.evaluate(()=>window.lastFrameTab),'teamtri');
+ await page.getByRole('button',{name:'Today',exact:true}).click();assert.equal(await page.evaluate(()=>window.lastFrameTab),'today');
+ await page.getByRole('button',{name:'Open ambient clock'}).click();assert.equal(await page.evaluate(()=>window.frameAmbientOpened),true);
+ await page.screenshot({path:path.join(out,'life-native-rail.png')});
  assert.deepEqual(errors,[]);fs.writeFileSync(path.join(out,'browser-proof.json'),JSON.stringify({passed:true,viewports:results,checks:['private data gate','no source or state-file access','read-only API','real calendar and weather','snapshot labelling','tabs','TEAMTRI link','ambient tap','automatic idle','long-title geometry','XSS escaping','empty/error states','native rail/content layouts','no JavaScript errors']},null,2));console.log('PASS: '+results.length+' layout checks, privacy/read-only, real sources, tabs, ambient, idle, long-title, XSS and error states');
 }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});
