@@ -13,6 +13,10 @@ const path=require('node:path');
   await page.goto(base+'/?content=1');
   await page.waitForFunction(()=>typeof window.showFrameDarkAmbient==='function');
   await page.waitForTimeout(1500);
+  // Bright/native content must remain visible beyond the old two-minute timer.
+  await page.clock.install();
+  await page.clock.fastForward(125000);
+  assert.equal(await page.locator('#ambient').isVisible(),false);
   await page.evaluate(()=>window.showFrameDarkAmbient());
   assert.equal(await page.locator('#ambient').isVisible(),true);
   assert.equal(await page.locator('#ambient').evaluate(e=>e.classList.contains('night')),true);
@@ -31,6 +35,13 @@ const path=require('node:path');
   assert.equal(await page.locator('#ambient').isVisible(),true);
   await page.locator('#ambient').click();
   assert.deepEqual(errors,[]);
-  console.log('Dark display, navigation race, light return, touch and idle saver checks passed');
+  // Sensor-free browser previews retain their old idle clock.
+  const preview=await context.newPage();
+  await preview.goto(base+'/');
+  await preview.waitForFunction(()=>typeof window.showFrameDarkAmbient==='function');
+  await preview.clock.install();
+  await preview.clock.fastForward(125000);
+  assert.equal(await preview.locator('#ambient').isVisible(),true);
+  console.log('Native idle suppression, browser idle fallback, dark display, navigation race, light return, touch and manual clock checks passed');
  } finally {await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1)});

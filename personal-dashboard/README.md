@@ -8,7 +8,7 @@ PerformanceNinja-branded, lightweight dashboard built on Tara for the 1024 × 60
 - Today: live calendar, live London weather, Next up and a dated Apple Reminders snapshot.
 - Left navigation: Today, TEAMTRI, AI usage, Linear and Tara.
 - On the frame, Home HQ 1.3-life displays TEAMTRI in a separate first-party WebView beside the fixed Life menu. Sign-in persists. Today returns to the day view, including from ambient mode. Controls opens the existing launcher/settings menu. An ordinary browser still offers the original external link because Strict session cookies prevent a straightforward cross-site iframe. Production TEAMTRI authentication and cookies are unchanged.
-- Ambient: two-minute idle clock, tap to return, night colours between 22:00 and 06:00 London time, small periodic content movement.
+- Ambient: light-controlled on the frame, with a manual clock button and tap to return. Ordinary browser previews retain the two-minute idle clock. Night colours between 22:00 and 06:00 London time, small periodic content movement.
 - Source uses HTML/CSS/JavaScript without a bundler or frontend framework. Assets, including Montserrat and the original brand icon, are local. No Google Fonts dependency.
 
 ## Data and privacy
@@ -91,6 +91,6 @@ Today has a compact live Codex usage bar in the header. It shows percentage used
 
 The installed app listens to Android TYPE_LIGHT. Initial raw cutoffs are dark ≤45 for20seconds and light ≥55 for3seconds, based on completely covered40–41 and uncovered60–62. These are provisional, not real-room darkness calibration. Controls → Light control shows the live reading and saves separate cutoffs on the frame across restarts. Temperature is deliberately unused.
 
-Darkness selects Today and shows the dim night clock. Light returns to Today only when darkness caused the screen saver. Steady daylight leaves an idle-triggered screen saver alone. Touch gives a60second manual override before another20second darkness hold. Sensor delivery gaps over5seconds and app pauses reset the hold. Android stays awake, so this changes the dashboard overlay, not device sleep. Existing Home registration, startup URL, TEAMTRI cookies, exit gesture and launcher route are preserved.
+Darkness selects Today and shows the dim night clock. Light returns to Today only when darkness caused the screen saver. The frame’s old two-minute idle trigger is disabled, so daylight keeps the dashboard visible. The manual clock button still works and light does not dismiss a manually opened clock. Touch gives a60second manual override before another20second darkness hold. Sensor delivery gaps over5seconds and app pauses reset the hold. Android stays awake, so this changes the dashboard overlay, not device sleep. Existing Home registration, startup URL, TEAMTRI cookies, exit gesture and launcher route are preserved.
 
 Policy test: compile `dashboard/kiosk/tests/LightPolicyTest.java` with `LightPolicy.java`, then run `com.wesbos.homehq.LightPolicyTest`. Browser checks: `FRAME_PROOF_DIR=<existing output directory> node personal-dashboard/tests/light-browser.cjs`. Device update retains the original signing certificate and version4 resource base. Rollback APK: workspace `outputs/photo-frame-2026-10-13/customisation/homehq-life.apk`.
