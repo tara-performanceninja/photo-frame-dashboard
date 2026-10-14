@@ -86,3 +86,11 @@ The existing loaded frame pages cannot acquire new JavaScript by polling data al
 ### Today Codex metric and Linear switches
 
 Today has a compact live Codex usage bar in the header. It shows percentage used and remaining capacity, preferring the weekly Codex window when available. Tap it to open AI usage. Failed/stale readings are labelled. Linear rows now include assignee and cycle. Existing project/status filters combine with the two scope switches. The scope defaults reset to current cycle and Rich on page load. Deployment proof: `outputs/photo-frame-2026-10-13/linear-today/`. These changes only affect content, so Controls → Reload dashboard is sufficient on the frame.
+
+## Light-controlled screen saver, 14 October 2026
+
+The installed app listens to Android TYPE_LIGHT. Initial raw cutoffs are dark ≤45 for20seconds and light ≥55 for3seconds, based on completely covered40–41 and uncovered60–62. These are provisional, not real-room darkness calibration. Controls → Light control shows the live reading and saves separate cutoffs on the frame across restarts. Temperature is deliberately unused.
+
+Darkness selects Today and shows the dim night clock. Light returns to Today only when darkness caused the screen saver. Steady daylight leaves an idle-triggered screen saver alone. Touch gives a60second manual override before another20second darkness hold. Sensor delivery gaps over5seconds and app pauses reset the hold. Android stays awake, so this changes the dashboard overlay, not device sleep. Existing Home registration, startup URL, TEAMTRI cookies, exit gesture and launcher route are preserved.
+
+Policy test: compile `dashboard/kiosk/tests/LightPolicyTest.java` with `LightPolicy.java`, then run `com.wesbos.homehq.LightPolicyTest`. Browser checks: `FRAME_PROOF_DIR=<existing output directory> node personal-dashboard/tests/light-browser.cjs`. Device update retains the original signing certificate and version4 resource base. Rollback APK: workspace `outputs/photo-frame-2026-10-13/customisation/homehq-life.apk`.

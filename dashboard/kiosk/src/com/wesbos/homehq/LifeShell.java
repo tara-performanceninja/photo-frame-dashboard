@@ -100,6 +100,11 @@ final class LifeShell {
     rail.evaluateJavascript("window.selectFrameTab('" + (showTeam ? "teamtri" : "today") + "')", null);
   }
 
+  void showDarkAmbient() {
+    select("today");
+    content.evaluateJavascript("window.showFrameDarkAmbient && window.showFrameDarkAmbient()", null);
+  }
+
   void back() {
     if (teamtri.getVisibility() == View.VISIBLE) select("today");
     else if (content.canGoBack()) content.goBack();

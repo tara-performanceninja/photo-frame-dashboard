@@ -35,6 +35,7 @@ public class MainActivity extends Activity {
 
   private WebView web;
   private LifeShell lifeShell;
+  private FrameLight frameLight;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private final int[] exitIds = new int[2];
   private final float[] exitX = new float[2];
@@ -57,11 +58,12 @@ public class MainActivity extends Activity {
       Log.i(TAG, "Exit hold: opening controls");
       new AlertDialog.Builder(MainActivity.this)
           .setTitle("Home HQ")
-          .setItems(new String[] {"Open launcher", "Android settings", "Reload dashboard"},
+          .setItems(new String[] {"Open launcher", "Android settings", "Reload dashboard", "Light control"},
               (dialog, which) -> {
                 if (which == 0) openLauncher();
                 else if (which == 1) startActivity(new Intent(Settings.ACTION_SETTINGS));
-                else web.reload();
+                else if (which == 2) web.reload();
+                else if (frameLight != null) frameLight.settings();
               })
           .setNegativeButton("Back to dashboard", null).show();
     }
@@ -99,6 +101,7 @@ public class MainActivity extends Activity {
     if (LifeShell.accepts(url)) {
       getPreferences(MODE_PRIVATE).edit().putString("life_start_url", url).apply();
       lifeShell = new LifeShell(this, web, url, showControls);
+      frameLight = new FrameLight(this, lifeShell);
     } else web.loadUrl(url);
   }
 
@@ -106,11 +109,13 @@ public class MainActivity extends Activity {
   protected void onResume() {
     super.onResume();
     NavigationService.setDashboardVisible(true);
+    if (frameLight != null) frameLight.start();
   }
 
   @Override
   protected void onPause() {
     cancelExit();
+    if (frameLight != null) frameLight.stop();
     NavigationService.setDashboardVisible(false);
     super.onPause();
   }
@@ -146,6 +151,7 @@ public class MainActivity extends Activity {
   @Override
   protected void onDestroy() {
     handler.removeCallbacksAndMessages(null);
+    if (frameLight != null) frameLight.stop();
     if (lifeShell != null) lifeShell.destroy();
     if (web != null) web.destroy();
     super.onDestroy();
@@ -161,6 +167,7 @@ public class MainActivity extends Activity {
   /** Watches for the two-finger exit hold; all touches still go to the page. */
   @Override
   public boolean dispatchTouchEvent(MotionEvent e) {
+    if (e.getActionMasked() == MotionEvent.ACTION_DOWN && frameLight != null) frameLight.manual();
     switch (e.getActionMasked()) {
       case MotionEvent.ACTION_DOWN:
         if (e.getX() < 80 && e.getY() < 80) {
