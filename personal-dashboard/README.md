@@ -8,6 +8,7 @@ PerformanceNinja-branded, lightweight dashboard built on Tara for the 1024 × 60
 - Today: live calendar, live London weather, Next up and a dated Apple Reminders snapshot.
 - Left navigation: Today, TEAMTRI, AI usage, Linear and Tara.
 - On the frame, Home HQ 1.3-life displays TEAMTRI in a separate first-party WebView beside the fixed Life menu. Sign-in persists. Today returns to the day view, including from ambient mode. Controls opens the existing launcher/settings menu. An ordinary browser still offers the original external link because Strict session cookies prevent a straightforward cross-site iframe. Production TEAMTRI authentication and cookies are unchanged.
+- The frame opens TEAMTRI's existing TV presentation automatically on page load and when selecting its tab. The Life sidebar remains visible. A bounded hydration wait invokes the existing F shortcut only on the authenticated dashboard route, then stops once TV view appears. Login pages are untouched, and Exit TV view remains usable until the next tab selection or page load. Ordinary browser links are unchanged.
 - Ambient: light-controlled on the frame, with a manual clock button and tap to return. Ordinary browser previews retain the two-minute idle clock. Night colours between 22:00 and 06:00 London time, small periodic content movement.
 - Source uses HTML/CSS/JavaScript without a bundler or frontend framework. Assets, including Montserrat and the original brand icon, are local. No Google Fonts dependency.
 

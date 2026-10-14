@@ -10,6 +10,18 @@ import android.widget.LinearLayout;
 
 /** A first-party TEAMTRI pane beside the trusted Life menu. No bridge in TEAMTRI. */
 final class LifeShell {
+  // Use the site's existing presentation shortcut, not Android/browser fullscreen.
+  // Wait for hydration, stop once open, and leave login/other TEAMTRI pages alone.
+  private static final String TEAMTRI_TV_SCRIPT =
+      "(function(){if(location.origin!=='https://teamtri.team'||"
+      + "!/^\\/people-dashboard\\/?$/.test(location.pathname))return;"
+      + "clearInterval(window.__frameTvTimer);var attempts=0;"
+      + "window.__frameTvTimer=setInterval(function(){"
+      + "if(document.querySelector('.tv-dashboard')||++attempts>120){"
+      + "clearInterval(window.__frameTvTimer);return;}"
+      + "if(document.querySelector('button.tv-shortcut'))"
+      + "window.dispatchEvent(new KeyboardEvent('keydown',{key:'f',bubbles:true}));"
+      + "},250);})()";
   private final Activity activity;
   private final WebView content;
   private final WebView rail;
@@ -64,6 +76,9 @@ final class LifeShell {
     teamtri.getSettings().setDomStorageEnabled(true);
     teamtri.getSettings().setUseWideViewPort(true);
     teamtri.setWebViewClient(new WebViewClient() {
+      @Override public void onPageFinished(WebView view, String url) {
+        view.evaluateJavascript(TEAMTRI_TV_SCRIPT, null);
+      }
       @Override public boolean shouldOverrideUrlLoading(WebView view, String target) {
         Uri u = Uri.parse(target);
         return !"https".equals(u.getScheme()) || !"teamtri.team".equals(u.getHost());
@@ -97,6 +112,7 @@ final class LifeShell {
       teamtriLoaded = true;
       teamtri.loadUrl("https://teamtri.team/people-dashboard");
     }
+    if (showTeam && teamtriLoaded) teamtri.evaluateJavascript(TEAMTRI_TV_SCRIPT, null);
     rail.evaluateJavascript("window.selectFrameTab('" + (showTeam ? "teamtri" : "today") + "')", null);
   }
 
