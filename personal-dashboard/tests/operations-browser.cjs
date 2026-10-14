@@ -33,6 +33,13 @@ try {
    const failures=await page.evaluate(()=>{
     const bad=[];if(document.documentElement.scrollWidth>innerWidth+1)bad.push('horizontal overflow');
     if(innerWidth>=700&&document.documentElement.scrollHeight>innerHeight+1)bad.push('vertical overflow');
+    if(innerWidth>=700&&!document.querySelector('#linear-view').hidden){
+      const controls=[...document.querySelectorAll('.linear-filters .scope-toggle,.linear-filters select,.linear-filters .count')].map(el=>el.getBoundingClientRect());
+      if(Math.max(...controls.map(r=>r.bottom))-Math.min(...controls.map(r=>r.bottom))>1)bad.push('Linear controls not aligned');
+      if(Math.max(...controls.map(r=>r.height))-Math.min(...controls.map(r=>r.height))>1)bad.push('Linear control heights differ');
+    }
+    const logo=document.querySelector('.brand img');
+    if(!logo.complete||!logo.naturalWidth||!logo.src.endsWith('/assets/brand-logo.png'))bad.push('original logo missing');
     const rail=document.querySelector('.rail');if(rail.scrollHeight>rail.clientHeight+1)bad.push('rail overflow');
     for(const el of document.querySelectorAll('.view:not([hidden]) .health-stat,.view:not([hidden]) .usage-card')){
       if(el.scrollWidth>el.clientWidth+1)bad.push('card overflow');

@@ -28,3 +28,30 @@ body.native-content .shell{grid-template-columns:minmax(0,1fr)}body.native-conte
 .today-header-actions{display:flex;align-items:center;gap:16px;flex-shrink:0}.today-codex{width:190px;border:1px solid var(--line);background:white;color:var(--navy);border-radius:12px;padding:10px 13px;text-align:left}.today-codex>span{font-size:11px;font-weight:650;display:block}.today-codex progress{height:6px;margin:6px 0}.today-codex small{display:block;font-size:9px;color:var(--muted)}.today-codex.usage-stale{border-color:#e4b576}.linear-filters{align-items:center;gap:10px}.scope-toggle{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:9px;background:white;padding:12px 10px;color:var(--navy)!important;font-size:11px!important;cursor:pointer}.scope-toggle input{width:18px;height:18px;margin:0;accent-color:var(--blue)}.linear-filters select{max-width:210px}
 @media(max-width:1100px) and (min-width:700px){#today-view h1{font-size:25px}.today-header-actions{gap:10px}.today-codex{width:170px;padding:8px 11px}}
 @media(max-width:699px){#today-view .page-header{flex-wrap:wrap}.today-header-actions{width:100%;justify-content:space-between}.today-codex{width:calc(100% - 50px)}.linear-filters{align-items:flex-start}.scope-toggle{width:100%;padding:11px}.linear-filters select{max-width:170px}}
+
+/* Original brand artwork, never a text-built substitute. */
+.brand img{width:100%;height:auto;max-width:114px;margin:0 auto}
+/* Align the controls themselves, with dropdown captions above the row. */
+.linear-filters{align-items:flex-end}
+.linear-filters .scope-toggle{min-height:42px;font-size:12px!important;padding:10px}
+.linear-filters select{height:42px;font-size:13px}
+.linear-filters .count{height:42px;flex-shrink:0}
+/* Main information gets more space. Source timestamps retain their small size. */
+.event-copy strong,.reminder-copy strong{font-size:15px}
+.event-time{font-size:14px}
+.next-detail{font-size:14px}
+.next-top-times .next-time{font-size:16px}
+.weather-card h2{font-size:20px}
+.weather-card>p:not(.source-status){font-size:13px}
+.forecast-day{font-size:12px}
+.forecast-day strong{font-size:14px}
+.issue-row h2{font-size:18px}
+.issue-row p{font-size:13px}
+.issue-id,.small-pill{font-size:12px}
+.metric-caption,.allowance-head{font-size:14px}
+.health-stat>span{font-size:11px}
+.today-codex>span{font-size:12px}
+@media(min-width:1400px){.event-copy strong,.reminder-copy strong{font-size:18px}.event-time{font-size:16px}}
+@media(max-height:650px) and (min-width:700px){.next-body h2{font-size:24px}.next-detail{font-size:12px}.weather-card h2{font-size:17px}.weather-card>p:not(.source-status){font-size:12px}.forecast-day{font-size:11px}.forecast-day strong{font-size:13px}}
+@media(max-width:699px){.brand img{width:100%;height:auto;max-width:114px}.linear-filters{align-items:flex-end}.issue-row h2{font-size:17px}}
+@media(max-height:650px) and (min-width:700px){.weather-card{padding:16px 19px}.weather-main{margin:5px 0 2px}.weather-main>span{font-size:44px}.weather-main svg{width:41px;height:41px}.weather-card h2{margin-bottom:4px}.forecast{padding-top:6px}}

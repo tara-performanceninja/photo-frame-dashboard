@@ -196,7 +196,7 @@ class Handler(BaseHTTPRequestHandler):
             return self.send(200,body,'application/json')
         if url.path=='/api/today':return self.send(200,self.server.sources.snapshot(),'application/json')
         if url.path=='/':path=ROOT/'index.html'
-        elif url.path in ('/style.css','/app.js','/operations.js','/assets/brand-icon.png','/assets/Montserrat.ttf'):path=ROOT/url.path[1:]
+        elif url.path in ('/style.css','/app.js','/operations.js','/assets/brand-icon.png','/assets/brand-logo.png','/assets/Montserrat.ttf'):path=ROOT/url.path[1:]
         else:return self.send(404,b'Not found')
         kinds={'.html':'text/html; charset=utf-8','.css':'text/css; charset=utf-8','.js':'text/javascript; charset=utf-8','.png':'image/png','.ttf':'font/ttf'}
         try:body=path.read_bytes()

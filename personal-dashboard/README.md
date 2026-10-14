@@ -44,7 +44,7 @@ A LAN device launch link can be generated locally from `.state/access.json` when
 
 ## Brand source
 
-Colours are from `knowledge/performanceninja/branding/source/PerformanceNinja Brand Colours.pdf`: navy `#003D79`, blue `#0065AB`, cyan `#0094D3` and purple `#75569B`. Pale surfaces use approved palette tints. The unchanged white icon is from the same canonical brand folder. Montserrat is bundled from the current PerformanceNinja website assets. The dashboard's layout is not a toolkit slide and does not inherit presentation navigation or slide contracts.
+Colours are from `knowledge/performanceninja/branding/source/PerformanceNinja Brand Colours.pdf`: navy `#003D79`, blue `#0065AB`, cyan `#0094D3` and purple `#75569B`. Pale surfaces use approved palette tints. The unchanged full white logo (with a separate original icon for the favicon) is from the same canonical brand folder. Montserrat is bundled from the current PerformanceNinja website assets. The dashboard's layout is not a toolkit slide and does not inherit presentation navigation or slide contracts.
 
 ## Verification
 
