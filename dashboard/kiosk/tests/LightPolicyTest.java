@@ -15,6 +15,11 @@ class LightPolicyTest {
     check(p.sample(61,166000)==0 && p.sample(61,169000)==2,"invalid reading breaks continuity");
     p.sample(41,170000);p.reset();
     check(p.sample(41,190000)==0,"pause/gap resets hold");
-    System.out.println("7 light policy scenarios passed");
+    p = new LightPolicy(); p.darkDelay=1000; p.lightDelay=2000; p.touchDelay=5000;
+    check(p.sample(1,0)==0 && p.sample(1,999)==0 && p.sample(1,1000)==1,"custom dark delay");
+    check(p.sample(60,1001)==0 && p.sample(60,3000)==0 && p.sample(60,3001)==2,"custom light delay");
+    p.manual(4000);
+    check(p.sample(1,8999)==0 && p.sample(1,9000)==0 && p.sample(1,10000)==1,"custom touch grace");
+    System.out.println("10 light policy scenarios passed");
   }
 }

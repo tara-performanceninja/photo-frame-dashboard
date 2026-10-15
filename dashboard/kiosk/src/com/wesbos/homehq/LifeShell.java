@@ -27,6 +27,7 @@ final class LifeShell {
   private final WebView rail;
   private final String todayUrl;
   private boolean teamtriLoaded;
+  private boolean dimmed;
   private final WebView teamtri;
   private final android.os.Handler retryHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
@@ -67,7 +68,7 @@ final class LifeShell {
       @JavascriptInterface public void showAmbient() {
         activity.runOnUiThread(() -> {
           select("today");
-          content.evaluateJavascript("window.showFrameAmbient()", null);
+          showDarkAmbient();
         });
       }
     }, "Frame");
@@ -100,11 +101,16 @@ final class LifeShell {
     owner.setContentView(layout);
     rail.loadUrl(railUrl);
     content.loadUrl(todayUrl);
+    String initial = owner.getSharedPreferences("frame_admin", 0).getString("tab", "today");
+    if ("teamtri".equals(initial)) select(initial);
+    setTextSize(owner.getSharedPreferences("frame_admin", 0).getInt("text_size", 100));
   }
 
   void select(String tab) {
     boolean showTeam = "teamtri".equals(tab);
     if (!showTeam && !"today".equals(tab)) return;
+    dimmed = false;
+    FrameAdmin.applyBrightness(activity, false);
     content.setVisibility(showTeam ? View.GONE : View.VISIBLE);
     teamtri.setVisibility(showTeam ? View.VISIBLE : View.GONE);
     if (!showTeam) content.evaluateJavascript("window.resumeFrameToday && window.resumeFrameToday()", null);
@@ -118,7 +124,17 @@ final class LifeShell {
 
   void showDarkAmbient() {
     select("today");
+    dimmed = true;
+    FrameAdmin.applyBrightness(activity, true);
     content.evaluateJavascript("window.showFrameDarkAmbient && window.showFrameDarkAmbient()", null);
+  }
+
+  void reload() { content.reload(); rail.reload(); if (teamtriLoaded) teamtri.reload(); }
+  void clock() { showDarkAmbient(); }
+  boolean isDimmed() { return dimmed; }
+  void setTextSize(int size) {
+    content.getSettings().setTextZoom(size);
+    teamtri.getSettings().setTextZoom(size);
   }
 
   void back() {

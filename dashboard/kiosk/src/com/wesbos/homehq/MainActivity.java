@@ -36,6 +36,7 @@ public class MainActivity extends Activity {
   private WebView web;
   private LifeShell lifeShell;
   private FrameLight frameLight;
+  private FrameAdmin admin;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private final int[] exitIds = new int[2];
   private final float[] exitX = new float[2];
@@ -56,16 +57,7 @@ public class MainActivity extends Activity {
     public void run() {
       exitArmed = false;
       Log.i(TAG, "Exit hold: opening controls");
-      new AlertDialog.Builder(MainActivity.this)
-          .setTitle("Home HQ")
-          .setItems(new String[] {"Open launcher", "Android settings", "Reload dashboard", "Light control"},
-              (dialog, which) -> {
-                if (which == 0) openLauncher();
-                else if (which == 1) startActivity(new Intent(Settings.ACTION_SETTINGS));
-                else if (which == 2) web.reload();
-                else if (frameLight != null) frameLight.settings();
-              })
-          .setNegativeButton("Back to dashboard", null).show();
+      if (admin != null) admin.show();
     }
   };
 
@@ -103,6 +95,8 @@ public class MainActivity extends Activity {
       lifeShell = new LifeShell(this, web, url, showControls);
       frameLight = new FrameLight(this, lifeShell);
     } else web.loadUrl(url);
+    admin = new FrameAdmin(this, web, lifeShell, frameLight);
+    admin.start();
   }
 
   @Override
@@ -137,7 +131,7 @@ public class MainActivity extends Activity {
     }
   }
 
-  private void openLauncher() {
+  void openLauncher() {
     Intent home = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
     for (ResolveInfo info : getPackageManager().queryIntentActivities(home, 0)) {
       String pkg = info.activityInfo.packageName;
@@ -153,6 +147,7 @@ public class MainActivity extends Activity {
     handler.removeCallbacksAndMessages(null);
     if (frameLight != null) frameLight.stop();
     if (lifeShell != null) lifeShell.destroy();
+    if (admin != null) admin.destroy();
     if (web != null) web.destroy();
     super.onDestroy();
   }
