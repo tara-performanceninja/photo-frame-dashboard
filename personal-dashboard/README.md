@@ -95,3 +95,12 @@ The installed app listens to Android TYPE_LIGHT. Initial raw cutoffs are dark â‰
 Darkness selects Today and shows the dim night clock. Light returns to Today only when darkness caused the screen saver. The frameâ€™s old two-minute idle trigger is disabled, so daylight keeps the dashboard visible. The manual clock button still works and light does not dismiss a manually opened clock. Touch gives a60second manual override before another20second darkness hold. Sensor delivery gaps over5seconds and app pauses reset the hold. Android stays awake, so this changes the dashboard overlay, not device sleep. Existing Home registration, startup URL, TEAMTRI cookies, exit gesture and launcher route are preserved.
 
 Policy test: compile `dashboard/kiosk/tests/LightPolicyTest.java` with `LightPolicy.java`, then run `com.wesbos.homehq.LightPolicyTest`. Browser checks: `FRAME_PROOF_DIR=<existing output directory> node personal-dashboard/tests/light-browser.cjs`. Device update retains the original signing certificate and version4 resource base. Rollback APK: workspace `outputs/photo-frame-2026-10-13/customisation/homehq-life.apk`.
+
+
+## Interrupted connection recovery, 16 October 2026
+
+All dashboard JSON requests now abort after ten seconds, including stalled response bodies. This releases the refresh and native-navigation guards so later polls and refresh taps can retry after a server restart or Wi-Fi interruption. Source data still refreshes on the existing schedule.
+
+A live frame investigation found old established client sockets with no matching server sockets after the Pi restarted, and a refresh waiting since the early-morning outage. Reloading the pages did not clear the old WebView networking state. Restarting only Home HQ recovered live data without clearing settings or sign-in. The updated web assets need no APK change. Wireless ADB closes on app startup as before.
+
+Regression checks: `node tests/request.cjs` covers stalled headers, stalled bodies, later successful reads, HTTP errors and timer cleanup. `tests/request-browser.cjs` exercises the actual refresh and native navigation guards through interrupted requests and recovery. Evidence: workspace `outputs/photo-frame-2026-10-16/`.

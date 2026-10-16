@@ -59,7 +59,7 @@ function renderTasks(){
 }
 async function refresh(){
  if(railOnly||busy)return;busy=true;
- try{var response=await fetch('/api/operations',{cache:'no-store'});if(!response.ok)throw new Error();data=await response.json();usage(data.usage||{status:'error'});linear(data.linear||{status:'error'});tara(data.tara||{status:'error'});}
+ try{data=await window.frameReadJson('/api/operations',{cache:'no-store'});usage(data.usage||{status:'error'});linear(data.linear||{status:'error'});tara(data.tara||{status:'error'});}
  catch(e){$('today-codex-note').textContent='Connection lost · last reading';$('today-codex').classList.add('usage-stale');['usage-status','linear-status','tara-status'].forEach(function(id){$(id).textContent='Connection lost · showing the last available view';});$('health-banner').classList.add('warn');$('health-banner').textContent='Health connection lost · last reading may be out of date';}
  finally{busy=false;}
 }
