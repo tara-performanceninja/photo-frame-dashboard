@@ -9,7 +9,7 @@ PerformanceNinja-branded, lightweight dashboard built on Tara for the 1024 × 60
 - Left navigation: Today, TEAMTRI, AI usage, Linear and Tara.
 - On the frame, Home HQ 1.3-life displays TEAMTRI in a separate first-party WebView beside the fixed Life menu. Sign-in persists. Today returns to the day view, including from ambient mode. Controls opens the existing launcher/settings menu. An ordinary browser still offers the original external link because Strict session cookies prevent a straightforward cross-site iframe. Production TEAMTRI authentication and cookies are unchanged.
 - The frame opens TEAMTRI's existing TV presentation automatically on page load and when selecting its tab. The Life sidebar remains visible. A bounded hydration wait invokes the existing F shortcut only on the authenticated dashboard route, then stops once TV view appears. Login pages are untouched, and Exit TV view remains usable until the next tab selection or page load. Ordinary browser links are unchanged.
-- Ambient: light-controlled on the frame, with a manual clock button and tap to return. Ordinary browser previews retain the two-minute idle clock. Night colours between 22:00 and 06:00 London time, small periodic content movement.
+- Ambient: light-controlled on the frame, with a manual clock button and tap to return. Ordinary browser previews retain the two-minute idle clock. Muted blue night colours between 22:00 and 06:00 London time, small periodic content movement.
 - Source uses HTML/CSS/JavaScript without a bundler or frontend framework. Assets, including Montserrat and the original brand icon, are local. No Google Fonts dependency.
 
 ## Data and privacy
@@ -104,3 +104,9 @@ All dashboard JSON requests now abort after ten seconds, including stalled respo
 A live frame investigation found old established client sockets with no matching server sockets after the Pi restarted, and a refresh waiting since the early-morning outage. Reloading the pages did not clear the old WebView networking state. Restarting only Home HQ recovered live data without clearing settings or sign-in. The updated web assets need no APK change. Wireless ADB closes on app startup as before.
 
 Regression checks: `node tests/request.cjs` covers stalled headers, stalled bodies, later successful reads, HTTP errors and timer cleanup. `tests/request-browser.cjs` exercises the actual refresh and native navigation guards through interrupted requests and recovery. Evidence: workspace `outputs/photo-frame-2026-10-16/`.
+
+## Blue low-light menu and clock, 18 October 2026
+
+The low-light clock uses muted blue rather than warm red/brown. The separate native menu uses the same near-black background, muted blue labels and a dark blue active tab. Content shares its low-light state with the same-origin rail through DOM storage, with no server polling or Android update. Touch/light return restores normal colours. Reloading the rail preserves the current state, while content/app startup resets stale state. Controls → Dashboard → Reload refreshes both panes and loads the new assets.
+
+The browser light suite covers two separate panes, automatic/manual clock entry, blue computed colours, menu dimming, light/touch return, rail reload and stale-state reset. Physical-frame verification remains pending until the panes are reloaded and checked on the device.

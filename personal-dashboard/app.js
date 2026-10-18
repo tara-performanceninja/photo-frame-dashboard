@@ -5,6 +5,16 @@ var params=new URLSearchParams(location.search),railOnly=params.has('rail'),nati
 if(railOnly)document.body.classList.add('rail-only');
 if(nativeContent)document.body.classList.add('native-content');
 var state=null,lastTouch=Date.now(),ambientOrigin='today',darkAmbient=false,currentTab='today',nativeTeamVisible=false,refreshing=false,selectedNext=null;
+// Native menu and content are separate same-origin WebViews. Share only the
+// display state through DOM storage, without a server round trip or APK change.
+var lowLightKey='frame-low-light';
+function syncLowLight(){var active=!$('ambient').hidden&&$('ambient').classList.contains('night');document.body.classList.toggle('low-light',active);if(nativeContent){try{localStorage.setItem(lowLightKey,active?'1':'0');}catch(e){}}}
+if(railOnly){
+  function readLowLight(){try{document.body.classList.toggle('low-light',localStorage.getItem(lowLightKey)==='1');}catch(e){}}
+  readLowLight();window.addEventListener('storage',function(e){if(e.key===lowLightKey||e.key===null)readLowLight();});
+}else{
+  new MutationObserver(syncLowLight).observe($('ambient'),{attributes:true,attributeFilter:['hidden','class']});syncLowLight();
+}
 var zone='Europe/London';
 function time(d){return new Date(d).toLocaleTimeString('en-GB',{timeZone:zone,hour:'2-digit',minute:'2-digit'});}
 function day(d){return new Date(d).toLocaleDateString('en-GB',{timeZone:zone,weekday:'long',day:'numeric',month:'long'});}
