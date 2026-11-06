@@ -63,3 +63,6 @@ body.low-light .rail .tab.active{background:#0a2035;color:#628db3;box-shadow:non
 body.low-light .rail .brand{opacity:.35}
 body.low-light .rail .timezone{color:#3e6283}
 body.low-light .controls-button{border-color:#27445f}
+
+/* Keep the published report scrollable beside the persistent Life menu. */
+.market-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.market-header h1{font-size:22px;margin:0}#market-report{width:100%;flex:1;min-height:0;border:0;border-radius:12px;background:white}body.rail-only .rail nav{flex-shrink:0}

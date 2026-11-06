@@ -114,3 +114,7 @@ The browser light suite covers two separate panes, automatic/manual clock entry,
 ## Menu selection race, 18 October 2026
 
 Android opens the shared Today pane for AI usage, Linear and Tara, then calls `selectFrameTab('today')` on the menu. That callback used to overwrite the immediate web selection until the next navigation poll. The menu now counts callbacks expected from its own clicks and keeps the requested web tab highlighted. Pending writes and navigation epochs prevent stale poll responses from undoing a newer click. Native-only clock/light/touch callbacks still select Today normally. Browser tests in `tests/navigation-browser.cjs` reproduce the original failure and cover all five choices, held stale responses and native callbacks delayed until after confirmation. Reload both panes to load this change. No APK update is needed.
+
+## Market Intelligence tab, 6 November 2026
+
+Markets displays the latest published daily report inside the existing content pane. No APK update. Reports are lazy-loaded on first selection, with a reload control for new editions. Only latest, archive and dated HTML from the existing rendered report directory are served, behind the dashboard authentication. Raw evidence and configuration remain unavailable. Set FRAME_MARKET_REPORTS if installing outside the Tara workspace.

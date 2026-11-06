@@ -22,10 +22,13 @@ function dateKey(d){var parts=new Intl.DateTimeFormat('en-GB',{timeZone:zone,yea
 function escape(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function status(s,label){if(!s)return label+' · not connected';var age=Date.now()-new Date(s.updatedAt).getTime();return label+' · '+(s.status==='error'?'connection unavailable':s.status==='partial'?'some sources unavailable':s.status==='snapshot'?'snapshot':'updated')+(s.updatedAt?' '+time(s.updatedAt):'')+(age>900000?' · may be out of date':'');}
 function markTab(tab){document.querySelectorAll('[data-tab]').forEach(function(b){var active=b.dataset.tab===tab;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});}
-function showTab(tab,fromBridge){if(['today','teamtri','usage','linear','tara'].indexOf(tab)<0)return;currentTab=tab;lastTouch=Date.now();markTab(tab);
+function showTab(tab,fromBridge){if(['today','teamtri','usage','linear','tara','market'].indexOf(tab)<0)return;currentTab=tab;lastTouch=Date.now();markTab(tab);
 if(railOnly&&window.Frame&&typeof window.Frame.openTab==='function'){if(!fromBridge){publishTab(tab);nativeSelections++;window.Frame.openTab(tab==='teamtri'?'teamtri':'today');}return;}
+if(tab==='market')loadMarket();
 document.querySelectorAll('main>.view').forEach(function(v){v.hidden=v.id!==tab+'-view';});location.hash=tab;
 if(nativeContent&&!fromBridge)publishTab(tab);}
+function loadMarket(force){var frame=$('market-report');if(force||!frame.getAttribute('src'))frame.src='/market/latest.html?refresh='+Date.now();}
+$('market-refresh').addEventListener('click',function(){loadMarket(true);});
 var navRevision=-1,navBusy=false,navEpoch=0,pendingTab=null,nativeSelections=0;
 function publishTab(tab){
   var epoch=++navEpoch;pendingTab=tab;
