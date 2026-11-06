@@ -9,6 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import ipaddress
 import json
 import os
+import re
 from pathlib import Path
 import secrets
 import subprocess
@@ -23,6 +24,7 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from operations import fetch_linear, fetch_usage, fetch_tara
 
+MARKET_REPORTS = Path(os.environ.get('FRAME_MARKET_REPORTS', str(ROOT.parents[2] / 'out/downloads/market-intelligence')))
 STATE = ROOT / '.state'
 TZ = ZoneInfo('Europe/London')
 GWS = '/home/adminrichwebb/.npm-global/bin/gws'
@@ -160,7 +162,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('X-Content-Type-Options','nosniff')
         self.send_header('X-Robots-Tag','noindex, nofollow')
         self.send_header('Referrer-Policy','no-referrer')
-        self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'none'")
+        self.send_header('Content-Security-Policy',headers.pop('Content-Security-Policy') if headers and 'Content-Security-Policy' in headers else "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'none'")
         for k,v in (headers or {}).items():self.send_header(k,v)
         self.end_headers();self.wfile.write(body)
 
@@ -195,6 +197,12 @@ class Handler(BaseHTTPRequestHandler):
             with self.server.nav_lock:body=json.dumps(self.server.navigation).encode()
             return self.send(200,body,'application/json')
         if url.path=='/api/today':return self.send(200,self.server.sources.snapshot(),'application/json')
+        if url.path.startswith('/market/'):
+            name=url.path[len('/market/'):]
+            if not re.fullmatch(r'(?:latest|index|\d{4}-\d{2}-\d{2})\.html',name):return self.send(404,b'Not found')
+            try:body=(MARKET_REPORTS/name).read_bytes()
+            except OSError:return self.send(503,b'Market report unavailable. Please try again shortly.')
+            return self.send(200,body,'text/html; charset=utf-8',{'Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; img-src data:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'"})
         if url.path=='/':path=ROOT/'index.html'
         elif url.path in ('/style.css','/request.js','/app.js','/operations.js','/assets/brand-icon.png','/assets/brand-logo.png','/assets/Montserrat.ttf'):path=ROOT/url.path[1:]
         else:return self.send(404,b'Not found')
@@ -214,7 +222,7 @@ class Handler(BaseHTTPRequestHandler):
             size=int(self.headers.get('Content-Length','0'))
             if not 0 < size <= 256:raise ValueError()
             tab=json.loads(self.rfile.read(size)).get('tab')
-            if tab not in ('today','teamtri','usage','linear','tara'):raise ValueError()
+            if tab not in ('today','teamtri','usage','linear','tara','market'):raise ValueError()
         except (ValueError,AttributeError):return self.send(400,b'Unknown tab')
         with self.server.nav_lock:
             self.server.navigation={'tab':tab,'revision':self.server.navigation['revision']+1}

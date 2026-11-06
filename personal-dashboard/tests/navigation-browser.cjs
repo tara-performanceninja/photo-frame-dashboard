@@ -27,7 +27,7 @@ const base='http://127.0.0.1:8788';
   await page.goto(base+'/?rail=1');
   await page.waitForTimeout(200);
   const selected=()=>page.locator('.tab.active').getAttribute('data-tab');
-  for(const tab of ['usage','linear','tara','teamtri','today']){
+  for(const tab of ['usage','linear','tara','market','teamtri','today']){
    holdGet=true;
    await page.waitForTimeout(1200);
    assert.ok(heldGet,'navigation read held before click');
@@ -51,6 +51,6 @@ const base='http://127.0.0.1:8788';
   // Native-only actions (light/touch/clock) still select Today with no pending click.
   await page.evaluate(()=>window.selectFrameTab('today'));
   assert.equal(await selected(),'today');
-  console.log('PASS: five tab choices retain selection through native callbacks, stale polls and server confirmation');
+  console.log('PASS: six tab choices retain selection through native callbacks, stale polls and server confirmation');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});
