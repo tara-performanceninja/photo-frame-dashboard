@@ -118,3 +118,11 @@ Android opens the shared Today pane for AI usage, Linear and Tara, then calls `s
 ## Market Intelligence tab, 6 November 2026
 
 Markets displays the latest published daily report inside the existing content pane. No APK update. Reports are lazy-loaded on first selection, with a reload control for new editions. Only latest, archive and dated HTML from the existing rendered report directory are served, behind the dashboard authentication. Raw evidence and configuration remain unavailable. Set FRAME_MARKET_REPORTS if installing outside the Tara workspace.
+
+## Legacy installed frame address, 14 November 2026
+
+The installed Android LifeShell accepts only `http://192.168.50.111:8788/`. The native Mac service is loopback-only behind Tailscale Serve. Changing the saved URL alone therefore loses native split-pane integration.
+
+`legacy_relay.py` is a compatibility transport on the retained Pi, not a data collector or restored production scheduler. Run it as an unprivileged service with `FRAME_RELAY_AUTH` naming a protected JSON file containing `key_sha256`, the SHA-256 of the existing frame access key. Bind is limited to the Pi LAN address. The relay checks the original key/cookie before using verified HTTPS to the Mac. This local gate must remain, because Tailscale Serve sees the Pi owner's identity upstream. Keep logging disabled for token URLs/cookies.
+
+Installed unit: `tara-frame-legacy-relay.service`. Roll back with `systemctl disable --now tara-frame-legacy-relay.service` on the Pi only. No Gateway or business writers need restarting. Removing this compatibility dependency requires a correctly signed Android update that accepts the new origin, together with a scoped authenticated LAN route on the Mac. Do not change the URL alone or clear app data/sign-ins.
