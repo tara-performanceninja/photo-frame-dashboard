@@ -35,6 +35,12 @@ class Relay(BaseHTTPRequestHandler):
                 or not authorised(self.path, self.headers.get('Cookie'), self.server.digest)):
             self.send_error(403, 'Private dashboard')
             return
+        if self.headers.get('Host') != '192.168.50.111:8788':
+            self.send_error(403)
+            return
+        if self.command == 'POST' and self.headers.get('Origin') != 'http://192.168.50.111:8788':
+            self.send_error(403, 'Same-origin navigation required')
+            return
         if self.command == 'POST' and urlsplit(self.path).path != '/api/navigation':
             self.send_error(405)
             return
@@ -46,6 +52,8 @@ class Relay(BaseHTTPRequestHandler):
             self.connection.settimeout(15)
             body = self.rfile.read(size) if size else None
             headers = {k: self.headers[k] for k in ('Cookie', 'Content-Type') if k in self.headers}
+            if self.command == 'POST':
+                headers['Origin'] = 'https://' + UPSTREAM + ':8443'
             conn = http.client.HTTPSConnection(UPSTREAM, 8443, timeout=15)
             try:
                 conn.request(self.command, self.path, body=body, headers=headers)
