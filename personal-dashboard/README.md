@@ -18,7 +18,7 @@ Calendar reads use the existing authenticated `gws` connection for Personal, TEA
 
 Weather uses Open-Meteo. **London is the initial location**, not a verified precise home location. Weather and calendar refresh on Tara every five minutes. The browser reloads the current cache every minute.
 
-Reminders currently contains the five upcoming-week entries from the authorised Mac read taken before Rich asked to stop Mac work. It does not contain overdue or undated reminders and does not refresh automatically. The UI labels it as a snapshot and adds an age warning. It is read-only, with no misleading completion controls. Continuous Apple Reminders sync requires a supported source route. The initial web build stayed on Tara. Rich later authorised Mac access to switch and update the frame.
+Reminders reads incomplete tasks from the native Mac’s iCloud-synced lists using `remindctl show open --json --no-input` every five minutes. Do Now includes due today and overdue items, excludes undated, future and completed items, and uses Europe/London dates. All-day due dates are not marked overdue until the next day. Failures retain the last reading with an unavailable status and its original timestamp. This path never edits reminders and does not depend on the owner’s Mac being on. The native service must have Reminders permission. The frame polls the feed every 30 seconds.
 
 All personal cache, access keys and Tailscale identity metadata live in ignored `.state/` files, with restricted file permissions. They are excluded from the release archive and Git. Calendar OAuth stays in its existing host-owned location and never reaches the browser. The HTTP server allowlists assets rather than exposing a directory tree. API writes are not implemented.
 

@@ -110,6 +110,33 @@ def fetch_weather():
     return {'status':'ok','updatedAt':iso_now(),'location':'London','current':{'temperature':c['temperature_2m'],'feelsLike':c['apparent_temperature'],'windMph':c['wind_speed_10m'],'code':c['weather_code'],'description':weather_description(c['weather_code'])},'daily':[{'date':date,'high':d['temperature_2m_max'][i],'low':d['temperature_2m_min'][i],'rainChance':d['precipitation_probability_max'][i]} for i,date in enumerate(d['time'])]}
 
 
+def normalise_reminders(rows, now=None):
+    today=(now or datetime.now(TZ)).astimezone(TZ).date()
+    items=[]
+    for row in rows:
+        if row.get('isCompleted') or not row.get('dueDate'): continue
+        due=datetime.fromisoformat(row['dueDate'].replace('Z','+00:00'))
+        all_day=bool(row.get('dueDateIsAllDay'))
+        # EventKit all-day values encode a calendar date, not a timed appointment.
+        due_day=due.date() if all_day else due.astimezone(TZ).date()
+        if due_day > today: continue
+        items.append({'id':row['id'],'title':row.get('title','Untitled reminder'),
+                      'due':due_day.isoformat()+'T00:00:00'+datetime.combine(due_day,datetime.min.time(),TZ).strftime('%z') if all_day else due.isoformat(),
+                      'allDay':all_day,'list':row.get('listName','Reminders'),
+                      'completed':False,'overdue':due_day < today if all_day else due < (now or datetime.now(TZ))})
+    return sorted(items,key=lambda item:item['due'])
+
+
+def fetch_reminders():
+    binary=os.environ.get('FRAME_REMINDCTL_BIN') or shutil.which('remindctl') or '/opt/homebrew/bin/remindctl'
+    result=subprocess.run([binary,'show','open','--json','--no-input'],capture_output=True,text=True,timeout=20)
+    if result.returncode: raise RuntimeError('Reminders unavailable')
+    rows=json.loads(result.stdout)
+    if not isinstance(rows,list): raise ValueError('Invalid reminders response')
+    return {'status':'ok','updatedAt':iso_now(),'scope':'Do Now: incomplete, due today or overdue',
+            'items':normalise_reminders(rows)}
+
+
 class Sources:
     def __init__(self):
         self.lock=threading.Lock();self.health_at=0;self.data={'calendar':{'status':'error','items':[]},'weather':{'status':'error'},'reminders':{'status':'error','items':[]},'generatedAt':iso_now()}
@@ -124,10 +151,10 @@ class Sources:
                 except Exception:
                     result=dict(self.data.get(key,{}));result['status']='error'
                 with self.lock:self.data[key]=result
-        try:
-            reminders=json.loads((STATE/'reminders.json').read_text())
-            if not isinstance(reminders.get('items'),list):raise ValueError()
-        except (OSError,ValueError):reminders={'status':'error','items':[]}
+        try:reminders=fetch_reminders()
+        except Exception:
+            reminders=dict(self.data.get('reminders',{'items':[]}))
+            reminders['status']='error'
         with self.lock:
             self.data['reminders']=reminders;self.data['generatedAt']=iso_now()
             atomic_json(STATE/'cache.json',self.data)
