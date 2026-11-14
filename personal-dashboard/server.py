@@ -12,6 +12,7 @@ import os
 import re
 from pathlib import Path
 import secrets
+import shutil
 import subprocess
 import sys
 import threading
@@ -27,7 +28,7 @@ from operations import fetch_linear, fetch_usage, fetch_tara
 MARKET_REPORTS = Path(os.environ.get('FRAME_MARKET_REPORTS', str(ROOT.parents[2] / 'out/downloads/market-intelligence')))
 STATE = ROOT / '.state'
 TZ = ZoneInfo('Europe/London')
-GWS = '/home/adminrichwebb/.npm-global/bin/gws'
+GWS = os.environ.get('GWS_BIN') or shutil.which('gws') or str(Path.home()/'.local/bin/gws')
 CALENDARS = [('richwebb13@gmail.com','Personal'),('rich.webb@teamtri.com','TEAMTRI'),('rich@militarysherpa.com','Military Sherpa'),('rich@ciriongroup.com','Cirion Group')]
 WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=51.5074&longitude=-0.1278&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&wind_speed_unit=mph&timezone=Europe%2FLondon&forecast_days=4'
 
@@ -231,7 +232,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--bind',default='127.0.0.1');p.add_argument('--port',type=int,default=8788);args=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('--bind',default='127.0.0.1');p.add_argument('--port',type=int,default=8788);p.add_argument('--lan-host');args=p.parse_args()
+    if args.lan_host and ipaddress.ip_address(args.lan_host) not in ipaddress.ip_network('192.168.50.0/24'):p.error('--lan-host must be on the trusted home LAN')
     STATE.mkdir(exist_ok=True,mode=0o700)
     config=STATE/'access.json'
     if not config.exists():atomic_json(config,{'key':secrets.token_urlsafe(32)})
@@ -251,6 +253,7 @@ def main():
     server.tail_host=settings.get('tailHost');server.tail_owner=settings.get('tailOwner')
     server.allowed_hosts={'127.0.0.1','localhost','192.168.50.111','192.168.50.103','100.91.58.81','tara.local'}
     if server.tail_host:server.allowed_hosts.add(server.tail_host)
+    if args.lan_host:server.allowed_hosts.add(args.lan_host)
     print('Private dashboard listening on port '+str(args.port),flush=True)
     server.serve_forever()
 

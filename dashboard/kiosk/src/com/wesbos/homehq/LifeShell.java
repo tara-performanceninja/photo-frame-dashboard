@@ -34,7 +34,7 @@ final class LifeShell {
   static boolean accepts(String url) {
     if (url == null) return false;
     Uri u = Uri.parse(url);
-    return "http".equals(u.getScheme()) && "192.168.50.111".equals(u.getHost())
+    return "http".equals(u.getScheme()) && ("192.168.50.111".equals(u.getHost()) || "192.168.50.241".equals(u.getHost()))
         && u.getPort() == 8788 && "/".equals(u.getPath());
   }
 

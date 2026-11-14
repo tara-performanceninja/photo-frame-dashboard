@@ -118,3 +118,11 @@ Android opens the shared Today pane for AI usage, Linear and Tara, then calls `s
 ## Market Intelligence tab, 6 November 2026
 
 Markets displays the latest published daily report inside the existing content pane. No APK update. Reports are lazy-loaded on first selection, with a reload control for new editions. Only latest, archive and dated HTML from the existing rendered report directory are served, behind the dashboard authentication. Raw evidence and configuration remain unavailable. Set FRAME_MARKET_REPORTS if installing outside the Tara workspace.
+
+## Direct native Mac frame route, 14 November 2026
+
+Home HQ1.4-mac/version5 accepts the native Mac LAN origin `http://192.168.50.241:8788/` in addition to the legacy origin for rollback. Both require exact HTTP scheme, port8788 and root path. TEAMTRI sign-in, controls, lighting and existing Home registration remain unchanged. Install only with the original matching signing certificate using `adb install -r`. Never uninstall or clear app data. `build.sh` now requires an existing key via `FRAME_SIGNING_KEY`, refusing to invent a new one.
+
+The existing native `org.tara.photo-frame` LaunchAgent uses `--bind 0.0.0.0 --port 8788 --lan-host 192.168.50.241`. The explicit LAN host must be within the trusted home /24. Existing source-IP, Host, cookie/key and same-origin navigation guards remain. Tailscale Serve continues through loopback, unchanged. No second data collector is introduced. The frame launch URL uses its existing private key to establish the cookie on the new origin. Do not publish that launch URL.
+
+Keep the compatibility relay until the new signed APK and direct URL pass on-device navigation, reload and sign-in checks. Then disable only `tara-frame-legacy-relay.service` on the Pi, preserving its files for rollback. Recheck the frame with the relay stopped. Mac service rollback is the saved pre-change server and LaunchAgent plist, together with the existing signed APK and legacy saved URL. Network DHCP reservations are not established by this change. If the Mac LAN address changes, update the explicit app allowlist and server LAN-host configuration together.
