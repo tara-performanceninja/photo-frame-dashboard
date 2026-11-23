@@ -23,7 +23,7 @@ from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
-from operations import fetch_linear, fetch_usage, fetch_tara
+from operations import fetch_cursor, fetch_linear, fetch_usage, fetch_tara
 
 MARKET_REPORTS = Path(os.environ.get('FRAME_MARKET_REPORTS', str(ROOT.parents[2] / 'out/downloads/market-intelligence')))
 STATE = ROOT / '.state'
@@ -144,8 +144,8 @@ class Sources:
         except (OSError,ValueError):pass
 
     def refresh(self):
-        with ThreadPoolExecutor(max_workers=4) as pool:
-            futures={'calendar':pool.submit(fetch_calendars),'weather':pool.submit(fetch_weather),'linear':pool.submit(fetch_linear),'usage':pool.submit(fetch_usage)}
+        with ThreadPoolExecutor(max_workers=5) as pool:
+            futures={'calendar':pool.submit(fetch_calendars),'weather':pool.submit(fetch_weather),'linear':pool.submit(fetch_linear),'usage':pool.submit(fetch_usage),'cursor':pool.submit(fetch_cursor)}
             for key,future in futures.items():
                 try:result=future.result()
                 except Exception:
@@ -168,7 +168,7 @@ class Sources:
                 try:self.data['tara']=fetch_tara();self.health_at=time.monotonic()
                 except Exception:
                     previous=dict(self.data.get('tara',{}));previous['status']='error';self.data['tara']=previous
-            return json.dumps({key:self.data.get(key,{'status':'error'}) for key in ('linear','usage','tara')}).encode()
+            return json.dumps({key:self.data.get(key,{'status':'error'}) for key in ('linear','usage','cursor','tara')}).encode()
 
     def loop(self):
         try:self.refresh()
