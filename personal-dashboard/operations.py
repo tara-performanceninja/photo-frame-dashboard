@@ -153,6 +153,27 @@ def normalise_usage(limits, usage):
             'usageAvailable': bool(buckets), 'resetCredits': (limits.get('rateLimitResetCredits') or {}).get('availableCount')}
 
 
+def fetch_cursor():
+    binary = os.environ.get('FRAME_CODEXBAR_BIN') or shutil.which('CodexBarCLI')
+    if not binary:
+        binary = str(Path.home() / 'Applications/CodexBar.app/Contents/Helpers/CodexBarCLI')
+    result = subprocess.run(
+        [binary, 'usage', '--provider', 'cursor', '--json', '--source', 'web', '--web-timeout', '10'],
+        capture_output=True, text=True, timeout=15, check=True,
+    )
+    account = next(row for row in json.loads(result.stdout) if row.get('provider') == 'cursor')
+    usage = account['usage']
+    primary = usage['primary']
+    used = float(primary['usedPercent'])
+    if not 0 <= used <= 100:
+        raise ValueError('Invalid Cursor allowance')
+    plan = usage.get('loginMethod')
+    return {'status': 'ok', 'updatedAt': usage['updatedAt'],
+            'plan': plan.removeprefix('Cursor ') if isinstance(plan, str) else None,
+            'windows': [{'name': 'Cursor', 'minutes': primary.get('windowMinutes'),
+                         'remainingPercent': 100 - used, 'resetsAt': primary.get('resetsAt')}]}
+
+
 def fetch_usage():
     limits, usage = codex_read()
     return normalise_usage(limits, usage)

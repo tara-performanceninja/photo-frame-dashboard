@@ -66,3 +66,9 @@ body.low-light .controls-button{border-color:#27445f}
 
 /* Keep the published report scrollable beside the persistent Life menu. */
 .market-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.market-header h1{font-size:22px;margin:0}#market-report{width:100%;flex:1;min-height:0;border:0;border-radius:12px;background:white}body.rail-only .rail nav{flex-shrink:0}
+
+.allowance-track{display:block;position:relative}
+.allowance-track[hidden],.pace-marker[hidden]{display:none}
+.pace-marker{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--navy);box-shadow:0 0 0 1px white;transform:translateX(-50%);pointer-events:none}
+
+.today-codex small{font-size:11px}
